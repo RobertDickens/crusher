@@ -12,9 +12,10 @@ Base = declarative_base()
 class Country(Base):
     __tablename__ = tb.country()
 
-    country_uid = Column(Integer, Sequence(tb.country() + '_uid_seq', schema='public'),
+    country_uid = Column(Integer, Sequence(tb.country() + '_country_uid_seq', schema='public'),
                          primary_key=True)
     country_name = Column(String)
+    country_code = Column(String)
     update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
@@ -32,7 +33,7 @@ class Country(Base):
 class Event(Base):
     __tablename__ = tb.event()
 
-    event_uid = Column(Integer, Sequence(tb.event() + '_uid_seq', schema='public'),
+    event_uid = Column(Integer, Sequence(tb.event() + '_event_uid_seq', schema='public'),
                        primary_key=True)
     event_betfair_id = Column(String)
     update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
@@ -53,7 +54,7 @@ class Event(Base):
 class Market(Base):
     __tablename__ = tb.market()
 
-    market_uid = Column(Integer, Sequence(tb.market() + '_uid_seq', schema='public'),
+    market_uid = Column(Integer, Sequence(tb.market() + '_market_uid_seq', schema='public'),
                         primary_key=True)
     event_uid = Column(Integer, ForeignKey(Event.event_uid))
     market_betfair_id = Column(String)
@@ -75,7 +76,7 @@ class Market(Base):
 class Team(Base):
     __tablename__ = tb.team()
 
-    team_uid = Column(Integer, Sequence(tb.team() + '_uid_seq', schema='public'),
+    team_uid = Column(Integer, Sequence(tb.team() + '_team_uid_seq', schema='public'),
                       primary_key=True)
     team_name = Column(String)
     country_uid = Column(Integer, ForeignKey(Country.country_uid))
@@ -96,12 +97,10 @@ class Team(Base):
 class Runner(Base):
     __tablename__ = tb.runner()
 
-    runner_uid = Column(Integer, Sequence(tb.runner() + '_uid_seq', schema='public'),
+    runner_uid = Column(Integer, Sequence(tb.runner() + '_runner_uid_seq', schema='public'),
                         primary_key=True)
     runner_code = Column(String)
     runner_betfair_code = Column(String)
-    update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
-    creation_datetime = Column(DateTime, default=datetime.utcnow())
 
     @classmethod
     def get_by_uid(cls, session, uid):
@@ -167,8 +166,8 @@ class ExchangeOddsSeries(Base):
     update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
-    event = relationship('Market', back_populates='exchange_odds_series')
-    market = relationship('Event', back_populates='exchange_odds_series')
+    event = relationship('Event', back_populates='exchange_odds_series')
+    market = relationship('Market', back_populates='exchange_odds_series')
 
     @classmethod
     def get_by_uid(cls, session, uid):
@@ -197,3 +196,10 @@ class ExchangeOddsSeriesItem(Base):
     @classmethod
     def get_by_alternative_key(cls, session, event_uid, market_uid):
         return session.query(cls).filter_by(event_uid=event_uid, market_uid=market_uid)
+
+
+class ItemFreqType(Base):
+    __tablename__ = tb.item_freq_type()
+
+    item_freq_type_code = Column(String, primary_key=True)
+    item_freq_type_desc = Column(String)

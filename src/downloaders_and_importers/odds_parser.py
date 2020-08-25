@@ -2,7 +2,6 @@ import os
 import bz2
 import json
 import datetime
-from matplotlib import pyplot as plt
 
 import numpy as np
 import pandas as pd
@@ -69,3 +68,4 @@ class ExchangeOddsExtractor:
 extractor = ExchangeOddsExtractor(os.path.join(file))
 metadata, df = extractor.extract_data()
 print(df)
+print(metadata)
