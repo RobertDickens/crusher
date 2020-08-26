@@ -44,3 +44,7 @@ def exchange_odds_series_item():
 
 def runner():
     return 'runner'
+
+
+def market_type():
+    return 'market_type'

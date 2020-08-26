@@ -12,5 +12,5 @@ with dbm.get_managed_session() as session:
     for country_name, country_code in mapping.items():
         country_name = country_name.lower()
         country_name = country_name.translate(str.maketrans('', '', string.punctuation))
-        session.add(Country(country_name=country_name,
-                            country_code=country_code))
+        Country.create_or_update(session, country_name=country_name,
+                                 country_code=country_code)
