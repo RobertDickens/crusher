@@ -120,14 +120,26 @@ print(market['market_id'])
 print(market['market_type'])
 print(odds)
 
-from orm.orm import Team, Country, Event, MarketType
+from orm.orm import Team, Country, Event, Market, ExchangeOddsSeries
 from utils.database_manager import dbm
+from utils import db_table_names as tb
+from crusher.market_type import MarketTypeCodeEnum as MTCEnum
+from crusher.item_freq_type import ItemFreqTypeCodeEnum as IFTCEnum
+from crusher.info_source import InfoSourceEnum as ISEnum
+
 
 with dbm.get_managed_session() as session:
     country = Country.get_by_code(session, country_code=event['country_code'])
-    team_a, existed = Team.create_or_update(session, team_name=event['team_a'],
+    team_a, _ = Team.create_or_update(session, team_name=event['team_a'],
                                    country=country)
-    team_b, existed = Team.create_or_update(session, team_name=event['team_b'],
+    team_b, _ = Team.create_or_update(session, team_name=event['team_b'],
                                    country=country)
-    event = Event.create_or_update(session, event['event_id'], team_a=team_a,
+    event, _ = Event.create_or_update(session, event['event_id'], team_a=team_a,
                                    team_b=team_b, in_play_start=event['in_play_start_datetime'])
+    market, _ = Market.create_or_update(session, market_betfair_id=str(market['market_id']),
+                                        market_type_code=MTCEnum.CORRECT_SCORE, event=event)
+    ExchangeOddsSeries.create_or_update(session, event=event, market=market,
+                                        item_freq_type_code=IFTCEnum.MINUTE,
+                                        info_source_code=ISEnum.EXCHANGE_HISTORICAL)
+    # odds.to_sql(name=tb.exchange_odds_series_item(), schema='public', con=session.engine, if_exists='append',
+    #             method='multi')

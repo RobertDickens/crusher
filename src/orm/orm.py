@@ -240,10 +240,11 @@ class Runner(Base):
 class InfoSourceOrganisation(Base):
     __tablename__ = tb.info_source_organisation()
 
-    info_source_orgn_uid = Column(Integer, Sequence(tb.info_source_organisation() + '_uid_seq', schema='public'),
+    info_source_orgn_uid = Column(Integer, Sequence(tb.info_source_organisation() + '_info_source_orgn_uid_seq',
+                                                    schema='public'),
                                   primary_key=True)
     orgn_name = Column(String)
-    oranisation_url = Column(String)
+    organisation_url = Column(String)
     update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
@@ -261,7 +262,7 @@ class InfoSourceOrganisation(Base):
 class InfoSource(Base):
     __tablename__ = tb.info_source()
 
-    info_source_uid = Column(Integer, Sequence(tb.info_source() + '_uid_seq', schema='public'),
+    info_source_uid = Column(Integer, Sequence(tb.info_source() + '_info_source_uid_seq', schema='public'),
                              primary_key=True)
     info_source_code = Column(String)
     info_source_orgn_uid = Column(Integer, ForeignKey(InfoSourceOrganisation.info_source_orgn_uid))
@@ -283,7 +284,7 @@ class InfoSource(Base):
 class ExchangeOddsSeries(Base):
     __tablename__ = tb.exchange_odds_series()
 
-    series_uid = Column(Integer, Sequence(tb.exchange_odds_series() + '_uid_seq', schema='public'),
+    series_uid = Column(Integer, Sequence(tb.exchange_odds_series() + '_series_uid_seq', schema='public'),
                         primary_key=True)
     event_uid = Column(Integer, ForeignKey(Event.event_uid))
     market_uid = Column(Integer, ForeignKey(Market.market_uid))
@@ -300,7 +301,7 @@ class ExchangeOddsSeries(Base):
         return session.query(cls).get(uid)
 
     @classmethod
-    def get_by_alternative_key(cls, session, event, market, item_freq_type_code,
+    def get_by_alternate_key(cls, session, event, market, item_freq_type_code,
                                info_source_code):
         return session.query(cls).filter_by(event=event, market=market,
                                             item_freq_type_code=item_freq_type_code,
