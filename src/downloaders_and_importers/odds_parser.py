@@ -27,7 +27,6 @@ class ExchangeOddsExtractor:
             definition_changes = []
             price_changes = []
             for line in fp:
-                print(line)
                 data = json.loads(line)
                 published_time = datetime.datetime.fromtimestamp(data['pt'] / 1000)
                 published_time = published_time.replace(second=0, microsecond=0)
@@ -111,8 +110,24 @@ class ExchangeOddsExtractor:
 
 
 extractor = ExchangeOddsExtractor(os.path.join(file))
-event_data, market_data, odds_df = extractor.extract_data()
+event, market, odds = extractor.extract_data()
 
-print(event_data)
-print(market_data)
-print(odds_df)
+print(event['event_id'])
+print(event['team_a'])
+print(event['team_b'])
+print(event['country_code'])
+print(market['market_id'])
+print(market['market_type'])
+print(odds)
+
+from orm.orm import Team, Country, Event, MarketType
+from utils.database_manager import dbm
+
+with dbm.get_managed_session() as session:
+    country = Country.get_by_code(session, country_code=event['country_code'])
+    team_a, existed = Team.create_or_update(session, team_name=event['team_a'],
+                                   country=country)
+    team_b, existed = Team.create_or_update(session, team_name=event['team_b'],
+                                   country=country)
+    event = Event.create_or_update(session, event['event_id'], team_a=team_a,
+                                   team_b=team_b, in_play_start=event['in_play_start_datetime'])

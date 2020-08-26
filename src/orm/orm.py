@@ -27,7 +27,11 @@ class Country(Base):
 
     @classmethod
     def get_by_name(cls, session, country_name):
-        return session.query(cls).filter_by(country_name=country_name)
+        return session.query(cls).filter_by(country_name=country_name).one()
+
+    @classmethod
+    def get_by_code(cls, session, country_code):
+        return session.query(cls).filter_by(country_code=country_code).one()
 
     @classmethod
     def get_by_alternate_key(cls, session, country_name, country_code):
@@ -48,19 +52,63 @@ class Country(Base):
             return country, False
 
 
+class Team(Base):
+    __tablename__ = tb.team()
+
+    team_uid = Column(Integer, Sequence(tb.team() + '_team_uid_seq', schema='public'),
+                      primary_key=True)
+    team_name = Column(String)
+    country_uid = Column(Integer, ForeignKey(Country.country_uid))
+    update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
+    creation_datetime = Column(DateTime, default=datetime.utcnow())
+
+    country = relationship('Country', back_populates='team')
+    event_team_a = relationship('Event', back_populates='team_a', foreign_keys="[Event.team_a_uid]")
+    event_team_b = relationship('Event', back_populates='team_b', foreign_keys="[Event.team_b_uid]")
+
+    @classmethod
+    def get_by_uid(cls, session, uid):
+        return session.query(cls).get(uid)
+
+    @classmethod
+    def get_by_team_name(cls, session, team_name):
+        return session.query(cls).filter_by(team_name=team_name).one()
+
+    @classmethod
+    def get_by_alternate_key(cls, session, team_name, country):
+        return session.query(cls).filter_by(team_name=team_name,
+                                            country=country).one()
+
+    @classmethod
+    def create_or_update(cls, session, team_name, country):
+        try:
+            team = cls.get_by_alternate_key(session, team_name=team_name,
+                                            country=country)
+            return team, True
+        except Exception:
+            session.add(cls(team_name=team_name, country=country))
+            session.commit()
+            team = cls.get_by_alternate_key(session, team_name=team_name,
+                                            country=country)
+            return team, False
+
+
 class Event(Base):
     __tablename__ = tb.event()
 
     event_uid = Column(Integer, Sequence(tb.event() + '_event_uid_seq', schema='public'),
                        primary_key=True)
     event_betfair_id = Column(String)
-    team_a = Column(String)
-    team_b = Column(String)
+    team_a_uid = Column(Integer, ForeignKey(Team.team_uid), unique=True)
+    team_b_uid = Column(Integer, ForeignKey(Team.team_uid), unique=True)
     in_play_start = Column(DateTime)
     update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
-    market = relationship("Market", back_populates="event")
+    team_a = relationship("Team", back_populates="event_team_a", foreign_keys=[team_a_uid])
+    team_b = relationship("Team", back_populates="event_team_b", foreign_keys=[team_b_uid])
+
+    market = relationship('Market', back_populates='event')
     exchange_odds_series = relationship('ExchangeOddsSeries', back_populates='event')
 
     @classmethod
@@ -141,7 +189,7 @@ class Market(Base):
     def create_or_update(cls, session, market_betfair_id, event, market_type_code):
         try:
             market = cls.get_by_alternate_key(session, market_betfair_id=market_betfair_id,
-                                               event=event, market_type_code=market_type_code)
+                                              event=event, market_type_code=market_type_code)
             return market, True
         except Exception:
             session.add(cls(market_betfair_id=market_betfair_id,
@@ -149,48 +197,9 @@ class Market(Base):
                             market_type_code=market_type_code))
             session.commit()
             market = cls.get_by_alternate_key(session, market_betfair_id=market_betfair_id,
-                                               event=event,
-                                               market_type_code=market_type_code)
+                                              event=event,
+                                              market_type_code=market_type_code)
             return market, False
-
-
-class Team(Base):
-    __tablename__ = tb.team()
-
-    team_uid = Column(Integer, Sequence(tb.team() + '_team_uid_seq', schema='public'),
-                      primary_key=True)
-    team_name = Column(String)
-    country_uid = Column(Integer, ForeignKey(Country.country_uid))
-    update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
-    creation_datetime = Column(DateTime, default=datetime.utcnow())
-
-    country = relationship('Country', back_populates='team')
-
-    @classmethod
-    def get_by_uid(cls, session, uid):
-        return session.query(cls).get(uid)
-
-    @classmethod
-    def get_by_team_name(cls, session, team_name):
-        return session.query(cls).filter_by(team_name=team_name).one()
-
-    @classmethod
-    def get_by_alternate_key(cls, session, team_name, country_code):
-        return session.query(cls).filter_by(team_name=team_name,
-                                            country_code=country_code).one()
-
-    @classmethod
-    def create_or_update(cls, session, team_name, country_code):
-        try:
-            team = cls.get_by_alternate_key(session, team_name=team_name,
-                                               country_code=country_code)
-            return team, True
-        except Exception:
-            session.add(cls(team_name=team_name, country_code=country_code))
-            session.commit()
-            team = cls.get_by_alternate_key(session, team_name=team_name,
-                                               country_code=country_code)
-            return team, False
 
 
 class Runner(Base):
@@ -218,13 +227,13 @@ class Runner(Base):
     def create_or_update(cls, session, runner_code, runner_betfair_code):
         try:
             runner = cls.get_by_alternate_key(session, runner_code=runner_code,
-                                               runner_betfair_code=runner_betfair_code)
+                                              runner_betfair_code=runner_betfair_code)
             return runner, True
         except Exception:
             session.add(cls(runner_code=runner_code, runner_betfair_code=runner_betfair_code))
             session.commit()
             runner = cls.get_by_alternate_key(session, runner_code=runner_code,
-                                               runner_betfair_code=runner_betfair_code)
+                                              runner_betfair_code=runner_betfair_code)
             return runner, False
 
 
