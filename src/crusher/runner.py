@@ -1,5 +1,5 @@
 from orm.orm import Runner
-from utils.database_manager import dbm
+from utils.db.database_manager import dbm
 from utils.custom_enum import CustomEnum
 
 
@@ -50,5 +50,5 @@ inverse_runner_betfair_map = {v: k for k, v in runner_betfair_map.items()}
 if __name__ == '__main__':
     with dbm.get_managed_session() as session:
         for runner_code in RunnerCode.to_dict().values():
-            session.add(Runner(runner_code=runner_code,
-                               runner_betfair_code=inverse_runner_betfair_map[runner_code]))
+            Runner.create_or_update(session, runner_code=runner_code,
+                                    runner_betfair_code=inverse_runner_betfair_map[runner_code])

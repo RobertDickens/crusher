@@ -1,5 +1,5 @@
 from orm.orm import InfoSourceOrganisation
-from utils.database_manager import dbm
+from utils.db.database_manager import dbm
 from utils.custom_enum import CustomEnum
 
 
@@ -7,7 +7,10 @@ class InfoSourceOrganisationEnum(CustomEnum):
     BETFAIR = 'BETFAIR'
 
 
-if __name__ == '__main__':
+def create_or_update_info_source_organisation():
     with dbm.get_managed_session() as session:
-        session.add(InfoSourceOrganisation(orgn_name=InfoSourceOrganisationEnum.BETFAIR,
-                                           organisation_url='www.betfair.co.uk'))
+        InfoSourceOrganisation.create_or_update(session, organisation_name=InfoSourceOrganisationEnum.BETFAIR,
+                                                orgn_url='www.betfair.co.uk')
+
+if __name__ == '__main__':
+    create_or_update_info_source_organisation()

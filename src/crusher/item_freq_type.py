@@ -1,5 +1,5 @@
 from orm.orm import ItemFreqType
-from utils.database_manager import dbm
+from utils.db.database_manager import dbm
 from utils.custom_enum import CustomEnum
 
 
@@ -10,6 +10,7 @@ class ItemFreqTypeCodeEnum(CustomEnum):
 
 if __name__ == '__main__':
     with dbm.get_managed_session() as session:
+        ItemFreqType.cr
         session.add(ItemFreqType(item_freq_type_code=ItemFreqTypeCodeEnum.MINUTE,
                                  item_freq_type_desc='minute'))
         session.add(ItemFreqType(item_freq_type_code=ItemFreqTypeCodeEnum.SECOND,

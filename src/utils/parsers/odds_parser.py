@@ -121,8 +121,7 @@ print(market['market_type'])
 print(odds)
 
 from orm.orm import Team, Country, Event, Market, ExchangeOddsSeries
-from utils.database_manager import dbm
-from utils import db_table_names as tb
+from utils.db.database_manager import dbm
 from crusher.market_type import MarketTypeCodeEnum as MTCEnum
 from crusher.item_freq_type import ItemFreqTypeCodeEnum as IFTCEnum
 from crusher.info_source import InfoSourceEnum as ISEnum

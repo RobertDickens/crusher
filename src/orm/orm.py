@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, Sequence, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
-import utils.db_table_names as tb
+import utils.db.db_table_names as tb
 
 Base = declarative_base()
 
@@ -155,6 +155,25 @@ class MarketType(Base):
     def get_by_code(cls, session, code):
         return session.query(cls).filter_by(market_type_code=code).one()
 
+    @classmethod
+    def get_by_alternate_key(cls, session, market_type_code, market_type_desc):
+        return session.query(cls).filter_by(market_type_code=market_type_code,
+                                            market_type_desc=market_type_desc).one()
+
+    @classmethod
+    def create_or_update(cls, session, market_type_code,
+                         market_type_desc):
+        try:
+            market_type = cls.get_by_alternate_key(session, market_type_code=market_type_code,
+                                                   market_type_desc=market_type_desc)
+            return market_type, True
+        except Exception:
+            session.add(cls(market_type_code=market_type_code, market_type_desc=market_type_desc))
+            session.commit()
+            market_type = cls.get_by_alternate_key(session, market_type_code=market_type_code,
+                                                   market_type_desc=market_type_desc)
+            return market_type, False
+
 
 class Market(Base):
     __tablename__ = tb.market()
@@ -243,7 +262,7 @@ class InfoSourceOrganisation(Base):
     info_source_orgn_uid = Column(Integer, Sequence(tb.info_source_organisation() + '_info_source_orgn_uid_seq',
                                                     schema='public'),
                                   primary_key=True)
-    orgn_name = Column(String)
+    organisation_name = Column(String)
     organisation_url = Column(String)
     update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
@@ -255,8 +274,26 @@ class InfoSourceOrganisation(Base):
         return session.query(cls).get(uid)
 
     @classmethod
-    def get_by_name(cls, session, orgn_name):
-        return session.query(cls).filter_by(orgn_name=orgn_name).one()
+    def get_by_name(cls, session, organisation_name):
+        return session.query(cls).filter_by(organisation_name=organisation_name).one()
+
+    @classmethod
+    def get_by_alternate_key(cls, session, organisation_name, organisation_url):
+        return session.query(cls).filter_by(organisation_name=organisation_name,
+                                            organisation_url=organisation_url).one()
+
+    @classmethod
+    def create_or_update(cls, session, organisation_name, organisation_url):
+        try:
+            info_source_orgn = cls.get_by_alternate_key(session, organisation_name=organisation_name,
+                                                        organisation_url=organisation_url)
+            return info_source_orgn, True
+        except Exception:
+            session.add(cls(organisation_name=organisation_name, organisation_url=organisation_url))
+            session.commit()
+            info_source_orgn = cls.get_by_alternate_key(session, organisation_name=organisation_name,
+                                                        organisation_url=organisation_url)
+            return info_source_orgn, False
 
 
 class InfoSource(Base):
@@ -280,6 +317,29 @@ class InfoSource(Base):
     def get_by_code(cls, session, info_source_code):
         return session.query(cls).filter_by(info_source_code=info_source_code).one()
 
+    @classmethod
+    def get_by_alternate_key(cls, session, info_source_code, info_source_organisation, info_source_name):
+        return session.query(cls).filter_by(info_source_code=info_source_code,
+                                            info_source_organisation=info_source_organisation,
+                                            info_source_name=info_source_name).one()
+
+    @classmethod
+    def create_or_update(cls, session, info_source_code, info_source_organisation, info_source_name):
+        try:
+            info_source = cls.get_by_alternate_key(session, info_source_code=info_source_code,
+                                                   info_source_organisation=info_source_organisation,
+                                                   info_source_name=info_source_name)
+            return info_source, True
+        except Exception:
+            session.add(cls(info_source_code=info_source_code,
+                            info_source_organisation=info_source_organisation,
+                            info_source_name=info_source_name))
+            session.commit()
+            info_source = cls.get_by_alternate_key(session, info_source_code=info_source_code,
+                                                   info_source_organisation=info_source_organisation,
+                                                   info_source_name=info_source_name)
+            return info_source, False
+
 
 class ExchangeOddsSeries(Base):
     __tablename__ = tb.exchange_odds_series()
@@ -302,7 +362,7 @@ class ExchangeOddsSeries(Base):
 
     @classmethod
     def get_by_alternate_key(cls, session, event, market, item_freq_type_code,
-                               info_source_code):
+                             info_source_code):
         return session.query(cls).filter_by(event=event, market=market,
                                             item_freq_type_code=item_freq_type_code,
                                             info_source_code=info_source_code).one()
@@ -373,3 +433,19 @@ class ItemFreqType(Base):
     @classmethod
     def get_by_code(cls, session, code):
         return session.query(cls).filter_by(item_freq_type_code=code).one()
+
+    @classmethod
+    def get_by_alternate_key(cls, session, code):
+        return session.query(cls).filter_by(item_freq_type_code=code).one()
+
+    @classmethod
+    def create_or_update(cls, session, code, item_freq_type_desc):
+        try:
+            item_freq = cls.get_by_alternate_key(session, code)
+            return item_freq, True
+        except Exception:
+            session.add(cls(code=code, item_freq_type_desc=item_freq_type_desc))
+            session.commit()
+            item_freq = cls.get_by_alternate_key(session, code=code)
+            return item_freq, False
+
