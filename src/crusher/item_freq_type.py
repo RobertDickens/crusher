@@ -10,8 +10,7 @@ class ItemFreqTypeCodeEnum(CustomEnum):
 
 if __name__ == '__main__':
     with dbm.get_managed_session() as session:
-        ItemFreqType.cr
-        session.add(ItemFreqType(item_freq_type_code=ItemFreqTypeCodeEnum.MINUTE,
-                                 item_freq_type_desc='minute'))
-        session.add(ItemFreqType(item_freq_type_code=ItemFreqTypeCodeEnum.SECOND,
-                                 item_freq_type_desc='second'))
+        ItemFreqType.create_or_update(session, item_freq_type_code=ItemFreqTypeCodeEnum.MINUTE,
+                                      item_freq_type_desc='minute')
+        ItemFreqType.create_or_update(session, item_freq_type_code=ItemFreqTypeCodeEnum.SECOND,
+                                      item_freq_type_desc='second')

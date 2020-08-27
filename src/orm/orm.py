@@ -435,17 +435,17 @@ class ItemFreqType(Base):
         return session.query(cls).filter_by(item_freq_type_code=code).one()
 
     @classmethod
-    def get_by_alternate_key(cls, session, code):
-        return session.query(cls).filter_by(item_freq_type_code=code).one()
+    def get_by_alternate_key(cls, session, item_freq_type_code):
+        return session.query(cls).filter_by(item_freq_type_code=item_freq_type_code).one()
 
     @classmethod
-    def create_or_update(cls, session, code, item_freq_type_desc):
+    def create_or_update(cls, session, item_freq_type_code, item_freq_type_desc):
         try:
-            item_freq = cls.get_by_alternate_key(session, code)
+            item_freq = cls.get_by_alternate_key(session, item_freq_type_code)
             return item_freq, True
         except Exception:
-            session.add(cls(code=code, item_freq_type_desc=item_freq_type_desc))
+            session.add(cls(item_freq_type_code=item_freq_type_code, item_freq_type_desc=item_freq_type_desc))
             session.commit()
-            item_freq = cls.get_by_alternate_key(session, code=code)
+            item_freq = cls.get_by_alternate_key(session, item_freq_type_code=item_freq_type_code)
             return item_freq, False
 

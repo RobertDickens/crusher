@@ -10,7 +10,8 @@ class InfoSourceOrganisationEnum(CustomEnum):
 def create_or_update_info_source_organisation():
     with dbm.get_managed_session() as session:
         InfoSourceOrganisation.create_or_update(session, organisation_name=InfoSourceOrganisationEnum.BETFAIR,
-                                                orgn_url='www.betfair.co.uk')
+                                                organisation_url='www.betfair.co.uk')
+
 
 if __name__ == '__main__':
     create_or_update_info_source_organisation()

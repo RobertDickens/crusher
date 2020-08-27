@@ -47,8 +47,13 @@ runner_betfair_map = {'0 - 0': RunnerCode.SCORE_0_0,
 
 inverse_runner_betfair_map = {v: k for k, v in runner_betfair_map.items()}
 
-if __name__ == '__main__':
+
+def create_or_update_runners():
     with dbm.get_managed_session() as session:
         for runner_code in RunnerCode.to_dict().values():
             Runner.create_or_update(session, runner_code=runner_code,
                                     runner_betfair_code=inverse_runner_betfair_map[runner_code])
+
+
+if __name__ == '__main__':
+    create_or_update_runners()
