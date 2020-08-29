@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import Column, Integer, String, Sequence, DateTime, ForeignKey
+import pandas as pd
+from sqlalchemy import Column, Integer, String, Numeric, Sequence, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -393,6 +394,8 @@ class ExchangeOddsSeriesItem(Base):
                              primary_key=True)
     series_uid = Column(Integer)
     runner_uid = Column(Integer)
+    ltp = Column(Numeric)
+    in_play = Column(Boolean)
     published_datetime = Column(DateTime)
     update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
@@ -405,23 +408,31 @@ class ExchangeOddsSeriesItem(Base):
     def get_by_alternative_key(cls, session, event_uid, market_uid):
         return session.query(cls).filter_by(event_uid=event_uid, market_uid=market_uid).one()
 
-    @classmethod
-    def get_by_alternate_key(cls, session, country_name, country_code):
-        return session.query(cls).filter_by(country_name=country_name,
-                                            country_code=country_code).one()
+    def insert_items_from_df(self, session, df):
+        required_columns = ['runner_uid', 'published_datetime', 'ltp', 'in_play']
+        if set(df.columns) != set(required_columns):
+            raise ValueError("Dataframe must have columns [runner_uid, published_datetime, ltp]")
+        df['series_uid'] = self.series_uid
+        df['update_datetime'] = datetime.utcnow()
+        df['creation_datetime'] = datetime.utcnow()
+
+        df.to_sql(name=tb.exchange_odds_series_item(), schema='public', con=session.engine,
+                  if_exists='append', method='multi')
 
     @classmethod
-    def create_or_update(cls, session, country_name, country_code):
-        try:
-            country = cls.get_by_alternate_key(session, country_name=country_name,
-                                               country_code=country_code)
-            return country, True
-        except Exception:
-            session.add(cls(country_name=country_name, country_code=country_code))
-            session.commit()
-            country = cls.get_by_alternate_key(session, country_name=country_name,
-                                               country_code=country_code)
-            return country, False
+    def get_series_items_df(cls, session, runner_uid=None, market_uid=None, event_uid=None,
+                            in_play=None):
+        query = session.query(cls)
+        if runner_uid:
+            query = filter_by_list_or_str(cls, attr='runner_uid', query=query, val=runner_uid)
+        if market_uid:
+            query = filter_by_list_or_str(cls, attr='market_uid', query=query, val=market_uid)
+        if event_uid:
+            query = filter_by_list_or_str(cls, attr='event_uid', query=query, val=market_uid)
+        if in_play:
+            query.filter_by(in_play=in_play)
+
+        return pd.read_sql(query.statement, query.session.bind)
 
 
 class ItemFreqType(Base):
@@ -449,3 +460,14 @@ class ItemFreqType(Base):
             item_freq = cls.get_by_alternate_key(session, item_freq_type_code=item_freq_type_code)
             return item_freq, False
 
+
+def filter_by_list_or_str(cls, attr, query, val):
+    if isinstance(val, list):
+        query = query.filter(getattr(cls, attr).in_(val))
+    elif isinstance(val, (str, int)):
+        filter_condition = {attr: val}
+        query = query.filter_by(**filter_condition)
+    else:
+        raise ValueError("must be string or list")
+
+    return query

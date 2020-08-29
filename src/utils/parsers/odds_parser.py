@@ -1,4 +1,3 @@
-import os
 import bz2
 import json
 import datetime
@@ -7,22 +6,22 @@ import numpy as np
 import pandas as pd
 
 
-path = r'C:\Users\rober\sport_data\BASIC\correct_score\2017\Jan\1\28057867'
-filename = "1.128873815.bz2"
-file = os.path.join(path, filename)
-
-# path = r'C:\Users\rober\sport_data\BASIC\event\2020\Jan\4\29609499'
-# filename = '29609499.bz2'
-# file = os.path.join(path, filename)
-
-
 class ExchangeOddsExtractor:
-    def __init__(self, file_path):
+    """For parsing betfair historical data into market, event and odds
+    data."""
+    def __init__(self, file_path, ignore_youth_leages=True, ignore_reserves=True,
+                 ignore_w=True, min_ltp_data_points=None):
         self.file_path = file_path
+        self.ignore_youth_leages = ignore_youth_leages
+        self.ignore_reserves = ignore_reserves
+        self.ignore_w = True
         self.definition_changes = None
         self.price_changes = None
+        self.min_ltp_data_points = None
 
     def _categorise_market_changes(self):
+        """Iterates through API messages and categorisings into market changes
+        and price changes"""
         with bz2.open(self.file_path, 'rt') as fp:
             definition_changes = []
             price_changes = []
@@ -44,16 +43,23 @@ class ExchangeOddsExtractor:
             self.price_changes = price_changes
 
     def extract_data(self):
+        """Extract data from a bz2 file"""
         self._categorise_market_changes()
         event_data, market_data = self._get_event_and_market_data()
 
         # Get odds changes for all runners
-        odds_df = pd.DataFrame(np.nan, index=pd.DatetimeIndex([x[0] for x in self.price_changes]),
+        all_unique_datetimes = list(set([x[0] for x in self.price_changes]))
+        odds_df = pd.DataFrame(np.nan, index=pd.DatetimeIndex(all_unique_datetimes),
                                columns=list(market_data['runner_ids'].values()))
         for published_datetime, price_change in self.price_changes:
             for rc in price_change['rc']:
                 if rc['ltp'] != 1000:
                     odds_df.at[published_datetime, market_data['runner_ids'][rc['id']]] = rc['ltp']
+
+        if self.min_ltp_data_points:
+            if odds_df < self.min_ltp_data_points:
+                raise ValueError(f"Ignoring {event_data['event_name']} since under"
+                                 f" {self.min_ltp_data_points} data points")
 
         return event_data, market_data, odds_df
 
@@ -76,8 +82,18 @@ class ExchangeOddsExtractor:
             if market_definition_change['marketDefinition']['inPlay'] is True and in_play_start_datetime is None:
                 in_play_start_datetime = published_time
 
+        if self.ignore_youth_leages:
+            if any(string in event_names[0] for string in ['U23', 'U21', 'U20', 'U19']):
+                raise ValueError(f"Ignoring match: {event_names[0]}")
+        if self.ignore_reserves:
+            if '(res)' in event_names[0]:
+                raise ValueError(f"Ignoring match: {event_names[0]}")
+        if self.ignore_w:
+            if '(W)' in event_names[0]:
+                raise ValueError(f"Ignoring match {event_names[0]}")
+
         if in_play_start_datetime is None:
-            raise ValueError("No in play information found")
+            raise ValueError(f"Ignoring match {event_names[0]} since no in play information found")
 
         runner_ids = {}
         for runner in runners:
@@ -107,38 +123,3 @@ class ExchangeOddsExtractor:
         if len(set(data)) != 1:
             raise ValueError("More than one eventname/id in market definition changes for single"
                              " data set")
-
-
-extractor = ExchangeOddsExtractor(os.path.join(file))
-event, market, odds = extractor.extract_data()
-
-print(event['event_id'])
-print(event['team_a'])
-print(event['team_b'])
-print(event['country_code'])
-print(market['market_id'])
-print(market['market_type'])
-print(odds)
-
-from orm.orm import Team, Country, Event, Market, ExchangeOddsSeries
-from utils.db.database_manager import dbm
-from crusher.market_type import MarketTypeCodeEnum as MTCEnum
-from crusher.item_freq_type import ItemFreqTypeCodeEnum as IFTCEnum
-from crusher.info_source import InfoSourceEnum as ISEnum
-
-
-with dbm.get_managed_session() as session:
-    country = Country.get_by_code(session, country_code=event['country_code'])
-    team_a, _ = Team.create_or_update(session, team_name=event['team_a'],
-                                   country=country)
-    team_b, _ = Team.create_or_update(session, team_name=event['team_b'],
-                                   country=country)
-    event, _ = Event.create_or_update(session, event['event_id'], team_a=team_a,
-                                   team_b=team_b, in_play_start=event['in_play_start_datetime'])
-    market, _ = Market.create_or_update(session, market_betfair_id=str(market['market_id']),
-                                        market_type_code=MTCEnum.CORRECT_SCORE, event=event)
-    ExchangeOddsSeries.create_or_update(session, event=event, market=market,
-                                        item_freq_type_code=IFTCEnum.MINUTE,
-                                        info_source_code=ISEnum.EXCHANGE_HISTORICAL)
-    # odds.to_sql(name=tb.exchange_odds_series_item(), schema='public', con=session.engine, if_exists='append',
-    #             method='multi')
