@@ -159,9 +159,28 @@ class Event(Base):
 
     @classmethod
     def get_by_alternate_key(cls, session, event_betfair_id,
-                             team_a, team_b):
+                             team_a, team_b, division=None):
         return session.query(cls).filter_by(event_betfair_id=event_betfair_id,
                                             team_a=team_a, team_b=team_b).one()
+
+    @classmethod
+    def get_events_for_analysis(cls, session, event_befair_id=None, team_a=None,
+                                team_b=None, division_code=None):
+        query = session.query(cls)
+        if event_befair_id:
+            query = filter_by_list_or_str(cls=cls, query=query, attr='event_betfair_id',
+                                          val=event_befair_id)
+        if team_a:
+            query = filter_by_list_or_str(cls=cls, query=query, attr='team_a',
+                                          val=team_a)
+        if team_b:
+            query = filter_by_list_or_str(cls=cls, query=query, attr='team_b',
+                                          val=team_b)
+        if division_code:
+            query = filter_by_list_or_str(cls=cls, query=query, attr='division_code',
+                                          val=division_code)
+
+        return query.all()
 
     @classmethod
     def get_by_teams_and_date(cls, session, team_a, team_b, event_date):
@@ -402,6 +421,7 @@ class ExchangeOddsSeries(Base):
 
     event = relationship('Event', back_populates='exchange_odds_series')
     market = relationship('Market', back_populates='exchange_odds_series')
+    item = relationship('ExchangeOddsSeriesItem', back_populates='exchange_odds_series')
 
     @classmethod
     def get_by_uid(cls, session, uid):
@@ -432,19 +452,36 @@ class ExchangeOddsSeries(Base):
                                               info_source_code=info_source_code)
             return series, False
 
+    def get_series_items_df(self, session):
+        query = session.query(ExchangeOddsSeriesItem).\
+            filter(ExchangeOddsSeriesItem.series_uid == self.series_uid)
+        return pd.read_sql(query.statement, query.session.bind)
+
+    @classmethod
+    def get_all_series(cls, session, division_code=None):
+        if isinstance(division_code, str):
+            division_code = [division_code]
+        query = session.query(cls)
+        if division_code:
+            query = query.join(Event).filter(Event.division_code.in_(division_code))
+
+        return pd.read_sql(query.statement, query.session.bind)
+
 
 class ExchangeOddsSeriesItem(Base):
     __tablename__ = tb.exchange_odds_series_item()
 
     series_item_uid = Column(Integer, Sequence(tb.exchange_odds_series_item() + '_uid_seq', schema='public'),
                              primary_key=True)
-    series_uid = Column(Integer)
+    series_uid = Column(Integer, ForeignKey(ExchangeOddsSeries.series_uid))
     runner_uid = Column(Integer)
     ltp = Column(Numeric)
     in_play = Column(Boolean)
     published_datetime = Column(DateTime)
     update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
+
+    exchange_odds_series = relationship('ExchangeOddsSeries', back_populates='item')
 
     @classmethod
     def get_by_uid(cls, session, uid):
@@ -467,16 +504,19 @@ class ExchangeOddsSeriesItem(Base):
 
     @classmethod
     def get_series_items_df(cls, session, runner_uid=None, market_uid=None, event_uid=None,
-                            in_play=None):
+                            in_play=None, division_code=None, item_freq_type_code=None):
         query = session.query(cls)
         if runner_uid:
             query = filter_by_list_or_str(cls, attr='runner_uid', query=query, val=runner_uid)
         if market_uid:
             query = filter_by_list_or_str(cls, attr='market_uid', query=query, val=market_uid)
-        if event_uid:
-            query = filter_by_list_or_str(cls, attr='event_uid', query=query, val=event_uid)
+        if division_code:
+            query = query.join(ExchangeOddsSeries).\
+                join(Event).filter(Event.division_code.in_(division_code))
         if in_play is not None:
             query = query.filter(cls.in_play == in_play)
+        if item_freq_type_code:
+            query = query.filter(ExchangeOddsSeries.item_freq_type_code == item_freq_type_code)
 
         return pd.read_sql(query.statement, query.session.bind)
 
