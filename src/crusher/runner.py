@@ -23,6 +23,16 @@ class RunnerCodeEnum(CustomEnum):
     ANY_OTHER_HOME_WIN = 'ANY_OTHER_HOME_WIN'
     ANY_OTHER_AWAY_WIN = 'ANY_OTHER_AWAY_WIN'
     ANY_OTHER_DRAW = 'ANY_OTHER_DRAW'
+    UNDER_1_5_GOALS = 'UNDER_1_5_GOALS'
+    UNDER_2_5_GOALS = 'UNDER_2_5_GOALS'
+    UNDER_3_5_GOALS = 'UNDER_3_5_GOALS'
+    UNDER_4_5_GOALS = 'UNDER_4_5_GOALS'
+    UNDER_5_5_GOALS = 'UNDER_5_5_GOALS'
+    OVER_1_5_GOALS = 'OVER_1_5_GOALS'
+    OVER_2_5_GOALS = 'OVER_2_5_GOALS'
+    OVER_3_5_GOALS = 'OVER_3_5_GOALS'
+    OVER_4_5_GOALS = 'OVER_4_5_GOALS'
+    OVER_5_5_GOALS = 'OVER_5_5_GOALS'
 
 
 runner_betfair_map = {'0 - 0': RunnerCodeEnum.SCORE_0_0,
@@ -43,7 +53,18 @@ runner_betfair_map = {'0 - 0': RunnerCodeEnum.SCORE_0_0,
                       '3 - 3': RunnerCodeEnum.SCORE_3_3,
                       'Any Other Home Win': RunnerCodeEnum.ANY_OTHER_HOME_WIN,
                       'Any Other Away Win': RunnerCodeEnum.ANY_OTHER_AWAY_WIN,
-                      'Any Other Draw': RunnerCodeEnum.ANY_OTHER_DRAW}
+                      'Any Other Draw': RunnerCodeEnum.ANY_OTHER_DRAW,
+                      'Under 1.5 Goals': RunnerCodeEnum.UNDER_1_5_GOALS,
+                      'Under 2.5 Goals': RunnerCodeEnum.UNDER_2_5_GOALS,
+                      'Under 3.5 Goals': RunnerCodeEnum.UNDER_3_5_GOALS,
+                      'Under 4.5 Goals': RunnerCodeEnum.UNDER_4_5_GOALS,
+                      'Under 5.5 Goals': RunnerCodeEnum.UNDER_5_5_GOALS,
+                      'Over 1.5 Goals': RunnerCodeEnum.OVER_1_5_GOALS,
+                      'Over 2.5 Goals': RunnerCodeEnum.OVER_2_5_GOALS,
+                      'Over 3.5 Goals': RunnerCodeEnum.OVER_3_5_GOALS,
+                      'Over 4.5 Goals': RunnerCodeEnum.OVER_4_5_GOALS,
+                      'Over 5.5 Goals': RunnerCodeEnum.OVER_5_5_GOALS
+                      }
 
 inverse_runner_betfair_map = {v: k for k, v in runner_betfair_map.items()}
 

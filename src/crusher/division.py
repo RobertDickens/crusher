@@ -3,9 +3,12 @@ from utils.db.database_manager import dbm
 from utils.custom_enum import CustomEnum
 
 
-class MarketTypeCodeEnum(CustomEnum):
-    CORRECT_SCORE = 'CORRECT_SCORE'
-    OVER_UNDER_GOALS = 'OVER_UNDER_GOALS'
+class DivisionCodeEnum(CustomEnum):
+    PREMIER_LEAGUE = 'CORRECT_SCORE'
+    CHAMPIONSHIP = 'OVER_UNDER_GOALS'
+    LEAGUE_1 = 'LEAGUE_1'
+    LEAGUE_2 = 'LEAGUE_2'
+    CONFERENCE = 'CONFERENCE'
 
 
 def create_or_update_market_type():

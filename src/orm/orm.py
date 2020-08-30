@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pandas as pd
-from sqlalchemy import Column, Integer, String, Numeric, Sequence, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Numeric, Sequence, Boolean, DateTime, ForeignKey, or_
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -94,6 +94,41 @@ class Team(Base):
             return team, False
 
 
+class Division(Base):
+    __tablename__ = tb.division()
+
+    division_uid = Column(Integer, Sequence(tb.division() + '_division_uid_seq', schema='public'),
+                          primary_key=True)
+    division_code = Column(String)
+    division_name = Column(String)
+
+    event = relationship('Event', back_populates='division')
+
+    @classmethod
+    def get_by_uid(cls, session, uid):
+        return session.query(cls).get(uid)
+
+    @classmethod
+    def get_by_division_code(cls, session, division_code):
+        return session.query(cls).filter_by(division_code=division_code).one()
+
+    @classmethod
+    def get_by_alternate_key(cls, session, division_code):
+        return session.query(cls).filter_by(division_code=division_code).one()
+
+    @classmethod
+    def create_or_update(cls, session, division_code, division_name):
+        try:
+            division = cls.get_by_alternate_key(session, division_code=division_code)
+            return division, True
+        except Exception:
+            session.add(cls(division_code=division_code,
+                            division_name=division_name))
+            session.commit()
+            division = cls.get_by_alternate_key(session, division_code=division_code)
+            return division, False
+
+
 class Event(Base):
     __tablename__ = tb.event()
 
@@ -102,6 +137,7 @@ class Event(Base):
     event_betfair_id = Column(String)
     team_a_uid = Column(Integer, ForeignKey(Team.team_uid), unique=True)
     team_b_uid = Column(Integer, ForeignKey(Team.team_uid), unique=True)
+    division_code = Column(String, ForeignKey(Division.division_code))
     in_play_start = Column(DateTime)
     update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
@@ -111,6 +147,7 @@ class Event(Base):
 
     market = relationship('Market', back_populates='event')
     exchange_odds_series = relationship('ExchangeOddsSeries', back_populates='event')
+    division = relationship('Division', back_populates='event')
 
     @classmethod
     def get_by_uid(cls, session, uid):
@@ -122,26 +159,29 @@ class Event(Base):
 
     @classmethod
     def get_by_alternate_key(cls, session, event_betfair_id,
-                             team_a, team_b, in_play_start):
+                             team_a, team_b):
         return session.query(cls).filter_by(event_betfair_id=event_betfair_id,
-                                            team_a=team_a, team_b=team_b, in_play_start=in_play_start).one()
+                                            team_a=team_a, team_b=team_b).one()
+
+    @classmethod
+    def get_by_teams(cls, session, teams):
+        team_uids = [team.team_uid for team in teams]
+        session.query(cls).filter(cls.team_a.in_(team_uids))
 
     @classmethod
     def create_or_update(cls, session, event_betfair_id,
                          team_a, team_b, in_play_start):
         try:
             event = cls.get_by_alternate_key(session, event_betfair_id=event_betfair_id,
-                                             team_a=team_a, team_b=team_b,
-                                             in_play_start=in_play_start)
+                                             team_a=team_a, team_b=team_b)
             return event, True
         except Exception:
             session.add(cls(event_betfair_id=event_betfair_id,
                             team_a=team_a, team_b=team_b, in_play_start=in_play_start))
             session.commit()
-            country = cls.get_by_alternate_key(session, event_betfair_id=event_betfair_id,
-                                               team_a=team_a, team_b=team_b,
-                                               in_play_start=in_play_start)
-            return country, False
+            event = cls.get_by_alternate_key(session, event_betfair_id=event_betfair_id,
+                                             team_a=team_a, team_b=team_b)
+            return event, False
 
 
 class MarketType(Base):
@@ -428,9 +468,9 @@ class ExchangeOddsSeriesItem(Base):
         if market_uid:
             query = filter_by_list_or_str(cls, attr='market_uid', query=query, val=market_uid)
         if event_uid:
-            query = filter_by_list_or_str(cls, attr='event_uid', query=query, val=market_uid)
-        if in_play:
-            query.filter_by(in_play=in_play)
+            query = filter_by_list_or_str(cls, attr='event_uid', query=query, val=event_uid)
+        if in_play is not None:
+            query = query.filter(cls.in_play == in_play)
 
         return pd.read_sql(query.statement, query.session.bind)
 

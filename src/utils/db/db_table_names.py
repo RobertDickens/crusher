@@ -48,3 +48,7 @@ def runner():
 
 def market_type():
     return 'market_type'
+
+
+def division():
+    return 'division'
