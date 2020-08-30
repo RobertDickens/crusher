@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pandas as pd
-from sqlalchemy import Column, Integer, String, Numeric, Sequence, Boolean, DateTime, ForeignKey, or_
+from sqlalchemy import Column, Integer, String, Numeric, Sequence, Boolean, DateTime, ForeignKey, or_, func
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -162,6 +162,12 @@ class Event(Base):
                              team_a, team_b):
         return session.query(cls).filter_by(event_betfair_id=event_betfair_id,
                                             team_a=team_a, team_b=team_b).one()
+
+    @classmethod
+    def get_by_teams_and_date(cls, session, team_a, team_b, event_date):
+        query = session.query(cls).filter_by(team_a=team_a, team_b=team_b)
+        query = query.filter(func.DATE(cls.in_play_start) == event_date)
+        return query.one()
 
     @classmethod
     def get_by_teams(cls, session, teams):
