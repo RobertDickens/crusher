@@ -33,12 +33,16 @@ with dbm.get_managed_session() as session:
     df = df[['series_uid', 'published_datetime', 'ltp']]
 
     for series_uid in df['series_uid'].unique():
+        series = ExchangeOddsSeries.get_by_uid(session, int(series_uid))
+        title = f"{series.event.team_a.team_name} vs {series.event.team_b.team_name}"
         sub_df = df[df['series_uid'] == series_uid].copy(deep=True)
         sub_df = sub_df.set_index(pd.DatetimeIndex(sub_df['published_datetime']))
         sub_df = sub_df.drop(['published_datetime', 'series_uid'], axis=1)
         sub_df = sub_df.resample('T').asfreq().fillna(method='ffill')
+        sub_df = sub_df.iloc[-300:]
         sub_df.plot()
         plt.ylim([1, max(sub_df['ltp'] + 0.3)])
+        plt.title(title)
         plt.show()
     value_counts = df['series_uid'].value_counts().reset_index().rename(columns={'series_uid': 'item_count',
                                                                                  'index': 'series_uid'})
