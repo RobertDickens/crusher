@@ -25,6 +25,7 @@ class DatabaseManager:
             raise
         finally:
             session.close()
+            session.connection().close()
 
 
 with open('C:\\Users\\rober\\crusher\\db\\db_credentials\\db_credentials.json') as json_file:
