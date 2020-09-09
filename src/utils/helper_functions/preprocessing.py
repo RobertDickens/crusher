@@ -21,7 +21,6 @@ def drop_outlier_series_by_std(df, std_threshhold=3, value_col='ltp', verbose=Tr
     value_mean = df[value_col].mean()
     value_std = df[value_col].std()
     mask = df[value_col] > value_mean + (std_threshhold * value_std)
-    print(df.columns)
     series_uids_to_drop = df.loc[mask]['series_uid'].unique()
     df = df[~df['series_uid'].isin(series_uids_to_drop)]
 
@@ -105,10 +104,14 @@ for series_uid in df['series_uid'].unique():
 slope_df = pd.DataFrame(columns=['start_ltp', 'slope'])
 for series_uid in df['series_uid'].unique():
     sub_df = df[df['series_uid'] == series_uid]
-    lr = LinearRegression(normalize=False, fit_intercept=False)
+    lr = LinearRegression(normalize=False, fit_intercept=True)
     lr.fit(sub_df['game_time'].values.reshape(-1, 1),
-           sub_df['ltp'].values.reshape(-1, 1))
+           sub_df['normalised_ltp'].values.reshape(-1, 1))
     slope = lr.coef_[0][0]
+    # plt.scatter(sub_df['game_time'], sub_df['normalised_ltp'], color='g')
+    # plt.plot(sub_df['game_time'], lr.predict(sub_df['game_time'].values.reshape(-1, 1)), color='k')
+    #
+    # plt.show()
     slope_df = slope_df.append({'start_ltp': sub_df['ltp'].max(),
                                 'slope': slope}, ignore_index=True)
 
