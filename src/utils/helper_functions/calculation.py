@@ -1,23 +1,25 @@
 import numpy as np
 
 
-def calculate_profit(back_stake, lay_stake, back_odds, lay_odds):
+def profit(back_stake, lay_stake, back_odds, lay_odds):
     """Calculate back profit and lay profit"""
     back_profit = (back_stake * back_odds) - (lay_stake * lay_odds) - back_stake + lay_stake
     lay_profit = lay_stake - back_stake
     return back_profit, lay_profit
 
 
-def calculate_profit_as_percentage_of_back_stake(back_odds, lay_odds):
+def profit_percentage_from_odds_diff(odds_diff):
     """Calculates profit as a percentage of backing stake
-    based on an even hedging strategy"""
-    back_stake = 100
-    lay_stake = (back_stake * back_odds) / lay_odds
-    profit = calculate_profit(back_stake, lay_stake, back_odds, lay_odds)
-    return profit
+    from odds difference"""
+    return odds_diff - 1
 
-back_odds = np.arange(2, 100)
-lay_odds = back_odds-1
-for b, l in zip(back_odds, lay_odds):
-    profit = calculate_profit_as_percentage_of_back_stake(b, l)
-    print(profit)
+
+def equal_hedge(back_odds, lay_odds, back_stake=None, lay_stake=None):
+    if back_stake and lay_stake:
+        raise ValueError("Must provide either back stake or lay stake, not both")
+    if back_stake:
+        return (back_odds * back_stake) / lay_odds
+    elif lay_stake:
+        return (lay_odds * lay_stake) / back_odds
+    else:
+        raise ValueError("Provide back or lay stake")
