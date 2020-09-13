@@ -1,0 +1,3 @@
+Experiment 1:
+Backtesting backing 0-0 backing and laying at specified times. Strategy seems
+to be doomed to lose money fast since the losses overcome the small gains.
