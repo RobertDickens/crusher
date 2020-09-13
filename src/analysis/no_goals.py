@@ -27,7 +27,6 @@ with dbm.get_managed_session() as session:
         sub_df = df[df['series_uid'] == series_uid].copy(deep=True)
         sub_df = sub_df.set_index(pd.DatetimeIndex(sub_df['published_datetime']))
         sub_df = sub_df.drop(['published_datetime', 'series_uid'], axis=1)
-        print(sub_df.tail(2).diff().iloc[1] > 1)
     value_counts = df['series_uid'].value_counts().reset_index().rename(columns={'series_uid': 'item_count',
                                                                                  'index': 'series_uid'})
     means = df.groupby('series_uid').mean().rename(columns={'ltp': 'series_mean'}).reset_index()

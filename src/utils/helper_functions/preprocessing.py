@@ -61,3 +61,11 @@ def drop_series_by_n_data_points(df, threshold):
     df = df[~df['series_uid'].isin(series_uids)]
     return df
 
+
+def normalise_in_play_ltp(df):
+    for series_uid in df['series_uid'].unique():
+        sub_df = df[df['series_uid'] == series_uid]
+        initial_value = sub_df.iloc[0]['ltp']
+        df.at[sub_df.index, 'normalised_ltp'] = df.loc[sub_df.index, 'ltp'] / initial_value
+    return df
+

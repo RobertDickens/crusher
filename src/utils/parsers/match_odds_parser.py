@@ -91,7 +91,7 @@ class ExchangeOddsExtractor:
             if any(string in event_names[0] for string in ['U23', 'U21', 'U20', 'U19']):
                 raise ValueError(f"Ignoring match: {event_names[0]}")
         if self.ignore_reserves:
-            if any(string in event_names[0] for string in ['(Res)', '(res)']):
+            if any(string in event_names[0] for string in ['(Res)', '(res)', 'Reserves', 'reserves']):
                 raise ValueError(f"Ignoring match: {event_names[0]}")
         if self.ignore_w:
             if '(W)' in event_names[0]:
