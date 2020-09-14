@@ -55,4 +55,4 @@ with dbm.get_managed_session() as session:
                     event.division_code = row['division']
                     print(row['division'])
                 except:
-                    print(f'skipping {team_a_name} v {team_b_name}, could not find event')
+                    print(f"skipping {team_a_name} v {team_b_name}, {row['match_date']} could not find event")

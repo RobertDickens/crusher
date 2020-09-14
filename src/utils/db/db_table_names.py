@@ -52,3 +52,7 @@ def market_type():
 
 def division():
     return 'division'
+
+
+def result():
+    return 'result'

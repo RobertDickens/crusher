@@ -4,10 +4,11 @@ from crusher.division import DivisionCodeEnum as DCEnum
 from crusher.item_freq_type import ItemFreqTypeCodeEnum as IFTCEnum
 from utils.helper_functions import calculation as calc
 from matplotlib import pyplot as plt
-
+from utils.db.database_manager import dbm
+from orm.orm import ExchangeOddsSeries
 
 df = get_odds_data(RCEnum.SCORE_0_0,
-                   divisions=[DCEnum.CHAMPIONSHIP],
+                   divisions=[DCEnum.PREMIER_LEAGUE],
                    item_freq_type_code=IFTCEnum.MINUTE,
                    in_play=True)
 
@@ -27,6 +28,11 @@ def backtest_back_lay(back_stake, odds_df, lay_time, back_time, starting_bankrol
                                  back_stake=back_stake, lay_stake=lay_stake)[0]
         except:
             profit = -back_stake
+            with dbm.get_managed_session() as session:
+                series = ExchangeOddsSeries.get_by_uid(session, series_uid)
+                print(series.event.team_a.team_name)
+                print(series.event.team_b.team_name)
+                print(series.event.in_play_start)
         if profit > 0:
             profit = 0.95 * profit
         bankroll = bankroll + profit
@@ -35,7 +41,7 @@ def backtest_back_lay(back_stake, odds_df, lay_time, back_time, starting_bankrol
     return bankroll_record
 
 
-bankroll_record_ = backtest_back_lay(100, odds_df=df, back_time=0, lay_time=15,
+bankroll_record_ = backtest_back_lay(100, odds_df=df, back_time=0, lay_time=10,
                                      starting_bankroll=1000)
 plt.plot(bankroll_record_)
 plt.show()

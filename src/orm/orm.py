@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pandas as pd
-from sqlalchemy import Column, Integer, String, Numeric, Sequence, Boolean, DateTime, ForeignKey, or_, func
+from sqlalchemy import Column, Integer, String, Numeric, Sequence, Boolean, DateTime, ForeignKey, or_, func, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -139,6 +139,7 @@ class Event(Base):
     team_b_uid = Column(Integer, ForeignKey(Team.team_uid), unique=True)
     division_code = Column(String, ForeignKey(Division.division_code))
     in_play_start = Column(DateTime)
+    match_date = Column(Date)
     update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
@@ -184,8 +185,7 @@ class Event(Base):
 
     @classmethod
     def get_by_teams_and_date(cls, session, team_a, team_b, event_date):
-        query = session.query(cls).filter_by(team_a=team_a, team_b=team_b)
-        query = query.filter(func.DATE(cls.in_play_start) == event_date)
+        query = session.query(cls).filter_by(team_a=team_a, team_b=team_b, match_date=event_date)
         return query.one()
 
     @classmethod
@@ -545,6 +545,37 @@ class ItemFreqType(Base):
             session.commit()
             item_freq = cls.get_by_alternate_key(session, item_freq_type_code=item_freq_type_code)
             return item_freq, False
+
+
+class Result(Base):
+    __tablename__ = tb.result()
+
+    result_uid = Column(Sequence(tb.result() + '_uid_seq', schema='public'), primary_key=True)
+    event_uid = Column(Integer, ForeignKey(Event.event_uid))
+    team_a_goals = Column(Integer)
+    team_b_goals = Column(Integer)
+    update_datetime = Column(DateTime)
+    creation_datetime = Column(DateTime)
+
+    @classmethod
+    def get_by_uid(cls, session, uid):
+        return session.query(cls).get(uid)
+
+    @classmethod
+    def get_by_alternate_key(cls, session, event):
+        return session.query(cls).filter_by(event=event).one()
+
+    @classmethod
+    def create_or_update(cls, session, event, team_a_goals, team_b_goals):
+        try:
+            result = cls.get_by_alternate_key(session, event=event)
+            return result, True
+        except Exception:
+            session.add(cls(event=event, team_a_goals=team_a_goals,
+                            team_b_goals=team_b_goals))
+            session.commit()
+            result = cls.get_by_alternate_key(session, event=event)
+            return result, False
 
 
 def filter_by_list_or_str(cls, attr, query, val):
