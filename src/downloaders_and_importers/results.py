@@ -1,9 +1,10 @@
 import os
 import string
+from datetime import datetime
 
 from utils.db.database_manager import dbm
 from utils.parsers.football_data_dot_com_parser import parse_football_data_com
-from orm.orm import Event, Team
+from orm.orm import Event, Team, Result
 
 import pandas as pd
 
@@ -30,7 +31,7 @@ str_replacements = {'sheffield weds': 'sheff wed',
                     'man united': 'man utd'}
 
 
-root_dir = r'C:\Users\rober\sport_data\CSV'
+root_dir = r'C:\Users\rober\sport_data\CSV\football_data_com'
 with dbm.get_managed_session() as session:
     for subdir, dirs, files in os.walk(root_dir):
         for file in files:
@@ -52,6 +53,12 @@ with dbm.get_managed_session() as session:
 
                 try:
                     event = Event.get_by_teams_and_date(session, team_a, team_b, row['match_date'])
+                    result = Result.create_or_update(session,
+                                                     event=event,
+                                                     team_a_goals=row['full_time_home_goals'],
+                                                     team_b_goals=row['full_time_away_goals'],
+                                                     update_datetime=datetime.utcnow(),
+                                                     creation_datetime=datetime.utcnow())
                     event.division_code = row['division']
                     print(row['division'])
                 except:

@@ -15,10 +15,6 @@ from utils.db import db_table_names as tb
 with dbm.get_managed_session() as session:
     runner_uid_from_code_map = {k: Runner.get_by_code(session, k).runner_uid for k in RCEnum.to_dict().values()}
 
-# root_dir = "C:\\Users\\rober\\sport_data\\ADVANCED\\correct_score\\2020\\Jan\\1\\29632648\\1.166709621.bz2"
-# extractor = ExchangeOddsExtractor(root_dir, min_ltp_data_points=5)
-# event_data, market_data, odds = extractor.extract_data()
-
 for month in ['Jan', 'Feb', 'Mar']:
     root_dir = "C:\\Users\\rober\\sport_data\\ADVANCED\\correct_score\\2020\\"
     root_dir = os.path.join(root_dir, month)

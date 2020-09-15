@@ -28,11 +28,12 @@ def backtest_back_lay(back_stake, odds_df, starting_bankroll):
         jump_times = get_minute_of_price_jumps(sub_df, 2)
         if jump_times is None:
             continue
-        if len(jump_times) < 2:
+        if jump_times[0] + 5 not in sub_df['game_time'].values:
             continue
-        back_time = jump_times[1] + 1
-        print(back_time)
-        lay_time = back_time + 10
+        if jump_times[0] < 6:
+            continue
+        back_time = jump_times[0] + 5
+        lay_time = jump_times[0] - 5
         if lay_time not in sub_df['game_time'].values.tolist():
             profit = -back_stake
         else:
@@ -46,13 +47,12 @@ def backtest_back_lay(back_stake, odds_df, starting_bankroll):
             profit = 0.95 * profit
         bankroll = bankroll + profit
         print(profit)
-        print(bankroll)
 
     return bankroll_record
 
 
-df = get_odds_data(runner=RCEnum.UNDER_2_5_GOALS, divisions=[DivisionCodeEnum.PREMIER_LEAGUE,
-                                                             DivisionCodeEnum.CHAMPIONSHIP],
+df = get_odds_data(runner=RCEnum.OVER_2_5_GOALS, divisions=[DivisionCodeEnum.PREMIER_LEAGUE,
+                                                            DivisionCodeEnum.CHAMPIONSHIP],
                    in_play=True, item_freq_type_code=IFTCEnum.MINUTE)
 bankroll_record_ = backtest_back_lay(100, odds_df=df, starting_bankroll=1000)
 plt.plot(bankroll_record_)

@@ -149,6 +149,7 @@ class Event(Base):
     market = relationship('Market', back_populates='event')
     exchange_odds_series = relationship('ExchangeOddsSeries', back_populates='event')
     division = relationship('Division', back_populates='event')
+    result = relationship('Result', back_populates='event')
 
     @classmethod
     def get_by_uid(cls, session, uid):
@@ -550,12 +551,14 @@ class ItemFreqType(Base):
 class Result(Base):
     __tablename__ = tb.result()
 
-    result_uid = Column(Sequence(tb.result() + '_uid_seq', schema='public'), primary_key=True)
+    result_uid = Column(Sequence(tb.result() + '_result_uid_seq', schema='public'), primary_key=True)
     event_uid = Column(Integer, ForeignKey(Event.event_uid))
     team_a_goals = Column(Integer)
     team_b_goals = Column(Integer)
     update_datetime = Column(DateTime)
     creation_datetime = Column(DateTime)
+
+    event = relationship("Event", back_populates="result")
 
     @classmethod
     def get_by_uid(cls, session, uid):
@@ -566,13 +569,14 @@ class Result(Base):
         return session.query(cls).filter_by(event=event).one()
 
     @classmethod
-    def create_or_update(cls, session, event, team_a_goals, team_b_goals):
+    def create_or_update(cls, session, event, team_a_goals, team_b_goals, update_datetime,
+                         creation_datetime):
         try:
             result = cls.get_by_alternate_key(session, event=event)
             return result, True
         except Exception:
-            session.add(cls(event=event, team_a_goals=team_a_goals,
-                            team_b_goals=team_b_goals))
+            session.add(cls(event=event, team_a_goals=team_a_goals, team_b_goals=team_b_goals,
+                            update_datetime=update_datetime, creation_datetime=creation_datetime))
             session.commit()
             result = cls.get_by_alternate_key(session, event=event)
             return result, False

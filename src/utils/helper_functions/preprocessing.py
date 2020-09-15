@@ -1,7 +1,7 @@
 import pandas as pd
 from orm.orm import ExchangeOddsSeries
 from utils.db.database_manager import dbm
-from sklearn.linear_model import LinearRegression
+
 
 def drop_series_with_price_jumps(df, threshold, verbose=True):
     """Drops series that contain price jumps above a given threshold. Useful for
