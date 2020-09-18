@@ -17,7 +17,6 @@ class Country(Base):
                          primary_key=True)
     country_name = Column(String)
     country_code = Column(String)
-    update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
     team = relationship('Team', back_populates='country')
@@ -60,7 +59,6 @@ class Team(Base):
                       primary_key=True)
     team_name = Column(String)
     country_uid = Column(Integer, ForeignKey(Country.country_uid))
-    update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
     country = relationship('Country', back_populates='team')
@@ -140,7 +138,6 @@ class Event(Base):
     division_code = Column(String, ForeignKey(Division.division_code))
     in_play_start = Column(DateTime)
     match_date = Column(Date)
-    update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
     team_a = relationship("Team", back_populates="event_team_a", foreign_keys=[team_a_uid])
@@ -250,7 +247,6 @@ class Market(Base):
     event_uid = Column(Integer, ForeignKey(Event.event_uid))
     market_betfair_id = Column(String)
     market_type_code = Column(String, ForeignKey(MarketType.market_type_code))
-    update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
     event = relationship("Event", back_populates="market")
@@ -331,7 +327,6 @@ class InfoSourceOrganisation(Base):
                                   primary_key=True)
     organisation_name = Column(String)
     organisation_url = Column(String)
-    update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
     info_source = relationship("InfoSource", back_populates='info_source_organisation')
@@ -371,7 +366,6 @@ class InfoSource(Base):
     info_source_code = Column(String)
     info_source_orgn_uid = Column(Integer, ForeignKey(InfoSourceOrganisation.info_source_orgn_uid))
     info_source_name = Column(String)
-    update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
     info_source_organisation = relationship('InfoSourceOrganisation', back_populates='info_source')
@@ -417,7 +411,6 @@ class ExchangeOddsSeries(Base):
     market_uid = Column(Integer, ForeignKey(Market.market_uid))
     item_freq_type_code = Column(String)
     info_source_code = Column(String)
-    update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
     event = relationship('Event', back_populates='exchange_odds_series')
@@ -479,7 +472,6 @@ class ExchangeOddsSeriesItem(Base):
     ltp = Column(Numeric)
     in_play = Column(Boolean)
     published_datetime = Column(DateTime)
-    update_datetime = Column(DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow())
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
     exchange_odds_series = relationship('ExchangeOddsSeries', back_populates='item')
@@ -497,7 +489,6 @@ class ExchangeOddsSeriesItem(Base):
         if set(df.columns) != set(required_columns):
             raise ValueError("Dataframe must have columns [runner_uid, published_datetime, ltp]")
         df['series_uid'] = self.series_uid
-        df['update_datetime'] = datetime.utcnow()
         df['creation_datetime'] = datetime.utcnow()
 
         df.to_sql(name=tb.exchange_odds_series_item(), schema='public', con=session.engine,
@@ -555,7 +546,6 @@ class Result(Base):
     event_uid = Column(Integer, ForeignKey(Event.event_uid))
     team_a_goals = Column(Integer)
     team_b_goals = Column(Integer)
-    update_datetime = Column(DateTime)
     creation_datetime = Column(DateTime)
 
     event = relationship("Event", back_populates="result")
@@ -569,14 +559,14 @@ class Result(Base):
         return session.query(cls).filter_by(event=event).one()
 
     @classmethod
-    def create_or_update(cls, session, event, team_a_goals, team_b_goals, update_datetime,
+    def create_or_update(cls, session, event, team_a_goals, team_b_goals,
                          creation_datetime):
         try:
             result = cls.get_by_alternate_key(session, event=event)
             return result, True
         except Exception:
             session.add(cls(event=event, team_a_goals=team_a_goals, team_b_goals=team_b_goals,
-                            update_datetime=update_datetime, creation_datetime=creation_datetime))
+                            creation_datetime=creation_datetime))
             session.commit()
             result = cls.get_by_alternate_key(session, event=event)
             return result, False

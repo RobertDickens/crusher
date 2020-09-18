@@ -7,23 +7,26 @@ from crusher.market_type import MarketTypeCodeEnum as MTCEnum
 from crusher.item_freq_type import ItemFreqTypeCodeEnum as IFTCEnum
 from crusher.runner import RunnerCodeEnum as RCEnum
 from crusher.info_source import InfoSourceEnum as ISEnum
-from crusher.runner import runner_betfair_map
-from utils.parsers.odds_parser import ExchangeOddsExtractor
+from utils.parsers.match_odds_parser import ExchangeOddsExtractor
 from utils.db import db_table_names as tb
 
 
 with dbm.get_managed_session() as session:
     runner_uid_from_code_map = {k: Runner.get_by_code(session, k).runner_uid for k in RCEnum.to_dict().values()}
-# 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
 for month in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']:
-    root_dir = "C:\\Users\\rober\\sport_data\\BASIC\\correct_score\\FR\\2020\\"
+    root_dir = "C:\\Users\\rober\\sport_data\\ADVANCED\\match_odds\\GB\\2020\\"
     root_dir = os.path.join(root_dir, month)
     for subdir, dirs, files in os.walk(root_dir):
-        for file in files:
-            with dbm.get_managed_session() as session:
+        with dbm.get_managed_session() as session:
+            for file in files:
                 try:
                     extractor = ExchangeOddsExtractor(os.path.join(subdir, file), min_ltp_data_points=5)
                     event_data, market_data, odds = extractor.extract_data()
+                    team_name_map = {v: k for k, v in event_data.items() if k in ['team_a', 'team_b']}
+                    odds.columns = [s.lower() for s in odds.columns]
+                    odds = odds.rename(columns=team_name_map)
+                    odds.columns = [s.upper() for s in odds.columns]
+                    odds = odds.rename(columns={'THE DRAW': RCEnum.THE_DRAW})
                     country = Country.get_by_code(session, country_code=event_data['country_code'])
                     team_a, _ = Team.create_or_update(session, team_name=event_data['team_a'],
                                                       country=country)
@@ -32,16 +35,15 @@ for month in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oc
                     event, _ = Event.create_or_update(session, event_data['event_id'], team_a=team_a,
                                                       team_b=team_b, in_play_start=event_data['in_play_start_datetime'])
                     market, _ = Market.create_or_update(session, market_betfair_id=str(market_data['market_id']),
-                                                        market_type_code=MTCEnum.CORRECT_SCORE, event=event)
+                                                        market_type_code=MTCEnum.MATCH_ODDS, event=event)
                     series, _ = ExchangeOddsSeries.create_or_update(session, event=event, market=market,
-                                                                    item_freq_type_code=IFTCEnum.MINUTE,
+                                                                    item_freq_type_code=IFTCEnum.SECOND,
                                                                     info_source_code=ISEnum.EXCHANGE_HISTORICAL)
                     session.commit()
                     items_df = odds.melt(ignore_index=False).reset_index().dropna()
                     items_df = items_df.rename(columns={'index': 'published_datetime',
                                                         'value': 'ltp',
                                                         'variable': 'runner_code'})
-                    items_df['runner_code'] = items_df['runner_code'].apply(lambda c: runner_betfair_map[c])
                     items_df['runner_uid'] = items_df['runner_code'].apply(lambda c: runner_uid_from_code_map[c])
                     items_df = items_df.drop('runner_code', axis=1)
                     items_df['series_uid'] = series.series_uid

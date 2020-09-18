@@ -33,6 +33,9 @@ class RunnerCodeEnum(CustomEnum):
     OVER_3_5_GOALS = 'OVER_3_5_GOALS'
     OVER_4_5_GOALS = 'OVER_4_5_GOALS'
     OVER_5_5_GOALS = 'OVER_5_5_GOALS'
+    TEAM_A = 'TEAM_A'
+    TEAM_B = 'TEAM_B'
+    THE_DRAW = 'THE_DRAW'
 
 
 runner_betfair_map = {'0 - 0': RunnerCodeEnum.SCORE_0_0,
@@ -63,7 +66,7 @@ runner_betfair_map = {'0 - 0': RunnerCodeEnum.SCORE_0_0,
                       'Over 2.5 Goals': RunnerCodeEnum.OVER_2_5_GOALS,
                       'Over 3.5 Goals': RunnerCodeEnum.OVER_3_5_GOALS,
                       'Over 4.5 Goals': RunnerCodeEnum.OVER_4_5_GOALS,
-                      'Over 5.5 Goals': RunnerCodeEnum.OVER_5_5_GOALS
+                      'Over 5.5 Goals': RunnerCodeEnum.OVER_5_5_GOALS,
                       }
 
 inverse_runner_betfair_map = {v: k for k, v in runner_betfair_map.items()}
@@ -73,7 +76,7 @@ def create_or_update_runners():
     with dbm.get_managed_session() as session:
         for runner_code in RunnerCodeEnum.to_dict().values():
             Runner.create_or_update(session, runner_code=runner_code,
-                                    runner_betfair_code=inverse_runner_betfair_map[runner_code])
+                                    runner_betfair_code=inverse_runner_betfair_map.get(runner_code))
 
 
 if __name__ == '__main__':
