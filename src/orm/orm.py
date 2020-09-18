@@ -258,6 +258,10 @@ class Market(Base):
         return session.query(cls).get(uid)
 
     @classmethod
+    def get_by_code(cls, session, code):
+        return session.query(cls).filter_by(market_type_code=code).one()
+
+    @classmethod
     def get_by_betfair_id(cls, session, betfair_id):
         return session.query(cls).filter_by(event_id=betfair_id).one()
 
@@ -496,15 +500,17 @@ class ExchangeOddsSeriesItem(Base):
 
     @classmethod
     def get_series_items_df(cls, session, runner_uid=None, market_uid=None, event_uid=None,
-                            in_play=None, division_code=None, item_freq_type_code=None):
-        query = session.query(cls)
+                            in_play=None, division_code=None, item_freq_type_code=None,
+                            market_type_code=None):
+        query = session.query(cls).join(ExchangeOddsSeries)
         if runner_uid:
-            query = filter_by_list_or_str(cls, attr='runner_uid', query=query, val=runner_uid)
+            query = query.filter(cls.runner_uid == runner_uid)
         if market_uid:
             query = filter_by_list_or_str(cls, attr='market_uid', query=query, val=market_uid)
+        if market_type_code:
+            query = query.join(Market).filter(Market.market_type_code == market_type_code)
         if division_code:
-            query = query.join(ExchangeOddsSeries).\
-                join(Event).filter(Event.division_code.in_(division_code))
+            query = query.join(Event).filter(Event.division_code.in_(division_code))
         if in_play is not None:
             query = query.filter(cls.in_play == in_play)
         if item_freq_type_code:
