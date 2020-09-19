@@ -1,5 +1,5 @@
 import pandas as pd
-from orm.orm import ExchangeOddsSeries
+from orm.orm import ExchangeOddsSeries, Event
 from utils.db.database_manager import dbm
 
 
@@ -69,3 +69,10 @@ def normalise_in_play_ltp(df):
         df.at[sub_df.index, 'normalised_ltp'] = df.loc[sub_df.index, 'ltp'] / initial_value
     return df
 
+
+def add_event_uid_to_df(df):
+    with dbm.get_managed_session() as session:
+        unique_series_uids = df['series_uid'].unique()
+        event_series_uid_map = {k: ExchangeOddsSeries.get_by_uid(session, int(k)).event_uid for k in unique_series_uids}
+        df['event_uid'] = df['series_uid'].map(event_series_uid_map)
+        return df
