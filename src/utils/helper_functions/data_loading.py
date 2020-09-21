@@ -144,7 +144,7 @@ for event_uid in df['event_uid'].unique():
     sub_df = sub_df.dropna()
     back_ixs = []
     for ix, row in sub_df.iterrows():
-        if row['match_odds_diff_1_mins'] < -0.6 and row['score_odds_diff_1_mins'] == 0:
+        if row['match_odds_diff_1_mins'] > 0.6 and row['score_odds_diff_1_mins'] == 0:
             back_ixs.append(ix)
         else:
             continue
@@ -154,22 +154,23 @@ for event_uid in df['event_uid'].unique():
         df_after_ix = sub_df[sub_df.index > back_ixs[0]]
         values = df_after_ix['score_odds'].values
         try:
-            lay_odds = next(v for v in values if v < back_odds)
+            lay_odds = next(v for v in values if v != back_odds)
         except:
             lay_odds = None
+
         if lay_odds is not None:
-            lay_stake = calc.equal_hedge(back_odds, lay_odds, 100)
+            lay_stake = calc.equal_hedge(back_odds, float(lay_odds), 100)
             profit = (calc.profit(back_stake=100,
                                   lay_stake=lay_stake,
                                   back_odds=back_odds,
-                                  lay_odds=lay_odds)[0])
+                                  lay_odds=float(lay_odds))[0])
         else:
             lay_odds = df_after_ix.iloc[-1]['score_odds']
-            lay_stake = calc.equal_hedge(back_odds, lay_odds, 100)
+            lay_stake = calc.equal_hedge(back_odds, float(lay_odds), 100)
             profit = (calc.profit(back_stake=100,
                                   lay_stake=lay_stake,
                                   back_odds=back_odds,
-                                  lay_odds=lay_odds)[0])
+                                  lay_odds=float(lay_odds))[0])
 
         bankroll += profit
         print(bankroll)
