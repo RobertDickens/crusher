@@ -61,12 +61,18 @@ class ExchangeOddsExtractor:
                 if rc['ltp'] < 800 and rc['ltp'] != 0:
                     odds_df.at[published_datetime, market_data['runner_ids'][rc['id']]] = rc['ltp']
 
+        # Get traded volume for all runners
+        volume_df = odds_df.copy(deep=True)
+        for published_datetime, price_change in self.price_changes:
+            for rc in price_change['rc']:
+                volume_df.at[published_datetime, market_data['runner_ids'][rc['id']]] = rc['tv']
+
         if self.min_ltp_data_points:
             if len(odds_df) < self.min_ltp_data_points:
                 raise ValueError(f"Ignoring {event_data['event_name']} since under"
                                  f" {self.min_ltp_data_points} data points")
 
-        return event_data, market_data, odds_df
+        return event_data, market_data, odds_df, volume_df
 
     def _get_event_and_market_data(self):
         event_names = []

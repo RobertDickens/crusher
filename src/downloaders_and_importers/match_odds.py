@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+import pandas as pd
 
 from orm.orm import Team, Country, Event, Market, ExchangeOddsSeries, Runner
 from utils.db.database_manager import dbm
@@ -21,7 +22,7 @@ for month in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oc
             for file in files:
                 try:
                     extractor = ExchangeOddsExtractor(os.path.join(subdir, file), min_ltp_data_points=5)
-                    event_data, market_data, odds = extractor.extract_data()
+                    event_data, market_data, odds, volume = extractor.extract_data()
                     team_name_map = {v: k for k, v in event_data.items() if k in ['team_a', 'team_b']}
                     odds.columns = [s.lower() for s in odds.columns]
                     odds = odds.rename(columns=team_name_map)
@@ -40,15 +41,25 @@ for month in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oc
                                                                     item_freq_type_code=IFTCEnum.SECOND,
                                                                     info_source_code=ISEnum.EXCHANGE_HISTORICAL)
                     session.commit()
-                    items_df = odds.melt(ignore_index=False).reset_index().dropna()
-                    items_df = items_df.rename(columns={'index': 'published_datetime',
-                                                        'value': 'ltp',
-                                                        'variable': 'runner_code'})
+                    odds_df = odds.melt(ignore_index=False).reset_index().dropna()
+                    odds_df = odds_df.rename(columns={'index': 'published_datetime',
+                                                      'value': 'ltp',
+                                                      'variable': 'runner_code'})
+                    volume_df = volume.melt(ignore_index=False).reset_index().dropna()
+                    volume_df = volume_df.rename(columns={'index': 'published_datetime',
+                                                          'value': 'traded_volume',
+                                                          'variable': 'runner_code'})
+                    items_df = pd.merge(odds_df,
+                                        volume_df,
+                                        how='left',
+                                        left_on=['published_datetime', 'runner_code'],
+                                        right_on=['published_datetime', 'runner_code'])
+                    items_df['ltp'] = items_df['ltp'].apply(lambda x: round(x, 2))
+                    items_df['traded_volume'] = items_df['traded_volume'].apply(lambda x: round(x, 2))
                     items_df['runner_uid'] = items_df['runner_code'].apply(lambda c: runner_uid_from_code_map[c])
                     items_df = items_df.drop('runner_code', axis=1)
                     items_df['series_uid'] = series.series_uid
                     items_df['in_play'] = items_df['published_datetime'] >= event_data['in_play_start_datetime']
-                    items_df['creation_datetime'] = datetime.utcnow()
 
                     items_df.to_sql(name=tb.exchange_odds_series_item(), schema='public',
                                     con=session.connection(),

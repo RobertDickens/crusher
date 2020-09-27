@@ -476,7 +476,6 @@ class ExchangeOddsSeriesItem(Base):
     ltp = Column(Numeric)
     in_play = Column(Boolean)
     published_datetime = Column(DateTime)
-    creation_datetime = Column(DateTime, default=datetime.utcnow())
 
     exchange_odds_series = relationship('ExchangeOddsSeries', back_populates='item')
 
