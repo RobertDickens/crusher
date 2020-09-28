@@ -27,7 +27,11 @@ for month in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oc
                     odds.columns = [s.lower() for s in odds.columns]
                     odds = odds.rename(columns=team_name_map)
                     odds.columns = [s.upper() for s in odds.columns]
+                    volume.columns = [s.lower() for s in volume.columns]
+                    volume = volume.rename(columns=team_name_map)
+                    volume.columns = [s.upper() for s in volume.columns]
                     odds = odds.rename(columns={'THE DRAW': RCEnum.THE_DRAW})
+                    volume = volume.rename(columns={'THE DRAW': RCEnum.THE_DRAW})
                     country = Country.get_by_code(session, country_code=event_data['country_code'])
                     team_a, _ = Team.create_or_update(session, team_name=event_data['team_a'],
                                                       country=country)
