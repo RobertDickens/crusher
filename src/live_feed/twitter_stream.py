@@ -2,10 +2,15 @@ import tweepy
 from live_feed.authentication import auth
 
 
-class MyStreamListener(tweepy.StreamListener):
-    def on_status(self, blah):
-        if blah.in_reply_to_status_id is None and blah.retweeted is False and 'RT ' not in blah.text and '@LFC' not in blah.text:
-            print(blah.text)
+class TwitterListener(tweepy.StreamListener):
+    def __init__(self, teams):
+        super().__init__()
+        self.teams = teams
+
+    def on_status(self, tweet_data):
+        if not self.filter_tweet(tweet_data):
+            print(tweet_data.text)
+            print(tweet_data.author.screen_name)
             return True
 
     def on_error(self, status):
@@ -14,13 +19,15 @@ class MyStreamListener(tweepy.StreamListener):
             return False
         print(status)
 
+    def filter_tweet(self, tweet_data):
+        is_reply = tweet_data.in_reply_to_status_id is not None
+        is_retweeted = tweet_data.retweeted is True
+        rt_in_text = 'RT ' in tweet_data.text
+        at_in_text = any([team.handle in tweet_data.text for team in self.teams])
+        return any([is_reply, is_retweeted, rt_in_text, at_in_text])
 
-class TwitterListener:
-    pass
 
-
-listener = MyStreamListener()
-myStream = tweepy.Stream(auth=auth, listener=listener)
-myStream.filter(follow=["19583545"])
-# TODO:
-# Set up clean class, make configs for team twitter accounts and integrate into streaming class
+def listen_for_teams(teams):
+    listener = TwitterListener(teams=teams)
+    my_stream = tweepy.Stream(auth=auth, listener=listener)
+    my_stream.filter(follow=[team.twitter_id for team in teams])
