@@ -1,5 +1,6 @@
 import tweepy
 from live_feed.authentication import auth
+import playsound
 
 
 class TwitterListener(tweepy.StreamListener):
@@ -11,6 +12,7 @@ class TwitterListener(tweepy.StreamListener):
         if not self.filter_tweet(tweet_data):
             print(tweet_data.text)
             print(tweet_data.author.screen_name)
+            playsound.playsound('C:\\Windows\\Media\\notify.wav')
             return True
 
     def on_error(self, status):
@@ -23,7 +25,7 @@ class TwitterListener(tweepy.StreamListener):
         is_reply = tweet_data.in_reply_to_status_id is not None
         is_retweeted = tweet_data.retweeted is True
         rt_in_text = 'RT ' in tweet_data.text
-        at_in_text = any([team.handle in tweet_data.text for team in self.teams])
+        at_in_text = any([team.handle.lower() in tweet_data.text.lower() for team in self.teams])
         return any([is_reply, is_retweeted, rt_in_text, at_in_text])
 
 

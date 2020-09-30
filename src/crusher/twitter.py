@@ -1,8 +1,3 @@
-from orm.orm import Division
-from utils.db.database_manager import dbm
-from utils.custom_enum import CustomEnum
-
-
 class LiverpoolFC:
     twitter_id = '19583545'
     handle = '@LFC'
