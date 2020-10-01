@@ -91,3 +91,23 @@ class WestHamUtd:
 class WolverhamptonWanderers:
     twitter_id = '49296276'
     handle = '@Wolves'
+
+
+class Brentford:
+    twitter_id = '103036163'
+    handle = '@BrentfordFC'
+
+
+class Fulham:
+    twitter_id = '22903812'
+    handle = '@FulhamFC'
+
+
+class SevillaFC:
+    twitter_id = '2941994339'
+    handle = '@SevillaFC_ENG'
+
+
+class LevanteFC:
+    twitter_id = '34743419'
+    handle = '@LevanteUD'
