@@ -93,14 +93,9 @@ class WolverhamptonWanderers:
     handle = '@Wolves'
 
 
-class Brentford:
+class BrentfordFC:
     twitter_id = '103036163'
     handle = '@BrentfordFC'
-
-
-class Fulham:
-    twitter_id = '22903812'
-    handle = '@FulhamFC'
 
 
 class SevillaFC:
@@ -111,3 +106,43 @@ class SevillaFC:
 class LevanteFC:
     twitter_id = '34743419'
     handle = '@LevanteUD'
+
+
+class FiorentinaACF:
+    twitter_id = '54857969'
+    handle = '@acffiorentina'
+
+
+class SampdoriaUC:
+    twitter_id = '491355440'
+    handle = '@sampdoria'
+
+
+class ParisStGermain:
+    twitter_id = '3001704118'
+    handle = '@PSG_English'
+
+
+class CoventryCity:
+    twitter_id = '70677962'
+    handle = '@Coventry_City'
+
+
+class BournemouthAFC:
+    twitter_id = '20880206'
+    handle = '@afcbournemouth'
+
+
+class AngersSCO:
+    twitter_id = '318695478'
+    handle = '@AngersSCO'
+
+
+class NorwichCityFC:
+    twitter_id = '187572312'
+    handle = '@NorwichCityFC'
+
+
+class DerbyFC:
+    twitter_id = '159041674'
+    handle = '@dcfcofficial'
