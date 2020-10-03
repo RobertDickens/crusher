@@ -146,3 +146,28 @@ class NorwichCityFC:
 class DerbyFC:
     twitter_id = '159041674'
     handle = '@dcfcofficial'
+
+
+class CrystalPalaceFC:
+    twitter_id = '85307509'
+    handle = '@CPFC'
+
+
+class QPR:
+    twitter_id = '71210107'
+    handle = '@QPR'
+
+
+class SheffieldWednesday:
+    twitter_id = '6448082'
+    handle = '@swfc'
+
+
+class Luton:
+    twitter_id = ''
+    handle = ''
+
+
+class Wycombe:
+    twitter_id = ''
+    handle = ''
