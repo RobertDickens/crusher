@@ -164,10 +164,10 @@ class SheffieldWednesday:
 
 
 class Luton:
-    twitter_id = ''
-    handle = ''
+    twitter_id = '35761373'
+    handle = '@LutonTown'
 
 
 class Wycombe:
-    twitter_id = ''
-    handle = ''
+    twitter_id = '97246282'
+    handle = '@wwfcofficial'
