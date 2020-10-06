@@ -5,22 +5,6 @@ import pandas as pd
 import os
 import time
 
-# An api key is emailed to you when you sign up to a plan
-api_key = 'C:\\Users\\rober\\crusher\\bookie_odds\\api_key.json'
-with open(api_key, 'r') as f:
-    api = json.load(f)
-
-API_KEY = api['api_key']
-SPORT = 'soccer_epl'
-REGION = 'uk'
-MARKET = 'h2h'
-
-sports_response = requests.get('https://api.the-odds-api.com/v3/sports', params={
-    'api_key': API_KEY
-})
-
-sports_json = json.loads(sports_response.text)
-
 
 class BookieOddsCollector:
     def __init__(self, api_key, sport, region, mkt):
@@ -45,15 +29,16 @@ class BookieOddsCollector:
         odds_data = odds_json['data']
         return self._parse_data_to_df(odds_data)
 
-    def log_odds_to_csv(self, csv_path, refresh_rate_minutes=None):
+    def log_odds_to_csv(self, csv_path, refresh_rate_minutes=60):
         starttime = time.time()
         while True:
             df = self.get_results()
             if not os.path.exists(csv_path):
-                df.to_csv('my_csv.csv', mode='w', header=True)
-
+                df.to_csv(csv_path, header=True, index=False)
+            else:
+                df.to_csv(csv_path, header=False, mode='a', index=False)
             print("Logged odds")
-            time.sleep(60.0 - ((time.time() - starttime) % 60.0))
+            time.sleep(refresh_rate_minutes - ((time.time() - starttime) % refresh_rate_minutes))
 
     def _parse_data_to_df(self, odds_data):
         rows = {'site': [],
@@ -80,18 +65,3 @@ class BookieOddsCollector:
         df = pd.DataFrame(rows)
         return df
 
-
-
-bookie_odds_collector = BookieOddsCollector(api_key=API_KEY,
-                                            sport=SPORT,
-                                            region=REGION,
-                                            mkt=MARKET)
-
-bookie_odds_collector.get_results()
-
-# odds_response = requests.get('https://api.the-odds-api.com/v3/odds', params={
-#     'api_key': API_KEY,
-#     'sport': SPORT,
-#     'region': REGION,
-#     'mkt': MARKET,
-# })
