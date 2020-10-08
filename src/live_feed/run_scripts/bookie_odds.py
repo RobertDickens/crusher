@@ -11,7 +11,7 @@ with open(api_key, 'r') as f:
 
 # --------Config-------- #
 API_KEY = api['api_key']
-SPORT = 'soccer_epl'
+SPORT = ['soccer_epl']
 REGION = 'uk'
 MARKET = 'h2h'
 SAVE_PATH = 'C:\\Users\\rober\\sport_data\\bookie_odds_prem_league.csv'
@@ -26,4 +26,3 @@ bookie_odds_collector = BookieOddsCollector(api_key=API_KEY,
                                             mkt=MARKET)
 
 bookie_odds_collector.log_odds_to_csv('C:\\Users\\rober\\sport_data\\bookie_odds_prem_league.csv')
-

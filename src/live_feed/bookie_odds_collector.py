@@ -5,6 +5,8 @@ import pandas as pd
 import os
 import time
 
+from crusher.division import DivisionCodeEnum as DCEnum
+
 
 class BookieOddsCollector:
     def __init__(self, api_key, sport, region, mkt):
@@ -40,6 +42,7 @@ class BookieOddsCollector:
             print("Logged odds")
             time.sleep(refresh_rate_minutes - ((time.time() - starttime) % refresh_rate_minutes))
 
+
     def _parse_data_to_df(self, odds_data):
         rows = {'site': [],
                 'home_team': [],
@@ -65,3 +68,15 @@ class BookieOddsCollector:
         df = pd.DataFrame(rows)
         return df
 
+
+the_odds_api_league_code = {DCEnum.PREMIER_LEAGUE: 'soccer_epl',
+                            DCEnum.CHAMPIONSHIP: 'soccer_efl_champ',
+                            DCEnum.LEAGUE_1: 'soccer_england_league1',
+                            DCEnum.LEAGUE_2: 'soccer_england_league2',
+                            DCEnum.FRANCE_LEAGUE_1: 'soccer_france_ligue_one',
+                            DCEnum.GERMANY_BUNDESLIGA: 'soccer_germany_bundesliga',
+                            DCEnum.GERMANY_BUNDESLIGA_2: 'soccer_germany_bundesliga2',
+                            DCEnum.ITALY_SERIE_A: 'soccer_italy_serie_a',
+                            DCEnum.ITALY_SERIE_B: 'soccer_italy_serie_b',
+                            DCEnum.SPAIN_LA_LIGA: 'soccer_spain_la_liga',
+                            DCEnum.SPAIN_SEGUNDA: 'soccer_spain_segunda_division'}
