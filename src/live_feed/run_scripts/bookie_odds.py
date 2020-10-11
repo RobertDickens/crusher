@@ -25,4 +25,5 @@ bookie_odds_collector = BookieOddsCollector(api_key=API_KEY,
                                             region=REGION,
                                             mkt=MARKET)
 
-bookie_odds_collector.log_odds_to_csv('C:\\Users\\rober\\sport_data\\bookie_odds_prem_league.csv')
+save_path = 'C:\\Users\\rober\\sport_data\\bookie_odds_prem_league.csv'
+bookie_odds_collector.stream_live_odds()

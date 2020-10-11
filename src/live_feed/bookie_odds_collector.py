@@ -31,7 +31,7 @@ class BookieOddsCollector:
         odds_data = odds_json['data']
         return self._parse_data_to_df(odds_data)
 
-    def log_odds_to_csv(self, csv_path, refresh_rate_minutes=60):
+    def log_odds_to_csv(self, csv_path, refresh_rate_seconds=60):
         starttime = time.time()
         while True:
             df = self.get_results()
@@ -40,8 +40,7 @@ class BookieOddsCollector:
             else:
                 df.to_csv(csv_path, header=False, mode='a', index=False)
             print("Logged odds")
-            time.sleep(refresh_rate_minutes - ((time.time() - starttime) % refresh_rate_minutes))
-
+            time.sleep(refresh_rate_seconds - ((time.time() - starttime) % refresh_rate_seconds))
 
     def _parse_data_to_df(self, odds_data):
         rows = {'site': [],
@@ -67,6 +66,26 @@ class BookieOddsCollector:
 
         df = pd.DataFrame(rows)
         return df
+
+    def stream_live_odds(self, refresh_rate_seconds=60, log_odds=False, csv_path=None,
+                         drop_betfair=True):
+        starttime = time.time()
+        while True:
+            df = self.get_results()
+            df = df[df['site'] != 'betfair']
+            if log_odds:
+                if not csv_path:
+                    raise ValueError("Need path to save odds")
+                if not os.path.exists(csv_path):
+                    df.to_csv(csv_path, header=True, index=False)
+                else:
+                    df.to_csv(csv_path, header=False, mode='a', index=False)
+
+            info_df_grouped = df.groupby(['home_team', 'away_team'])
+            info_df = info_df_grouped.mean().reset_index()
+            info_df = info_df[['home_team', 'away_team', 'home_team_odds', 'away_team_odds', 'draw_odds']]
+            print(info_df)
+            time.sleep(refresh_rate_seconds - ((time.time() - starttime) % refresh_rate_seconds))
 
 
 the_odds_api_league_code = {DCEnum.PREMIER_LEAGUE: 'soccer_epl',
