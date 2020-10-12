@@ -46,6 +46,7 @@ class BookieOddsCollector:
         rows = {'site': [],
                 'home_team': [],
                 'away_team': [],
+                'match_date': [],
                 'home_team_odds': [],
                 'away_team_odds': [],
                 'draw_odds': [],
@@ -53,6 +54,9 @@ class BookieOddsCollector:
         for event in odds_data:
             home_team = event['teams'][0].lower()
             away_team = event['teams'][1].lower()
+            match_date = event['commence_time']
+            match_date = datetime.datetime.fromtimestamp(match_date)
+            match_date = match_date.date
             for site in event['sites']:
                 rows['site'].append(site['site_nice'].lower())
                 update_datetime = site['last_update']
@@ -63,23 +67,25 @@ class BookieOddsCollector:
                 rows['draw_odds'].append(site['odds'][self.mkt][2])
                 rows['home_team'].append(home_team)
                 rows['away_team'].append(away_team)
+                rows['match_date'].append(match_date)
 
         df = pd.DataFrame(rows)
         return df
 
-    def stream_live_odds(self, refresh_rate_seconds=60, log_odds=False, csv_path=None,
-                         drop_betfair=True):
+    def stream_live_odds(self, refresh_rate_seconds=60, log_odds=False, save_path=None,
+                         drop_betfair_from_live_stream=True):
         starttime = time.time()
         while True:
             df = self.get_results()
-            df = df[df['site'] != 'betfair']
+            if drop_betfair_from_live_stream:
+                df = df[df['site'] != 'betfair']
             if log_odds:
-                if not csv_path:
+                if not save_path:
                     raise ValueError("Need path to save odds")
-                if not os.path.exists(csv_path):
-                    df.to_csv(csv_path, header=True, index=False)
+                if not os.path.exists(save_path):
+                    df.to_csv(save_path, header=True, index=False)
                 else:
-                    df.to_csv(csv_path, header=False, mode='a', index=False)
+                    df.to_csv(save_path, header=False, mode='a', index=False)
 
             info_df_grouped = df.groupby(['home_team', 'away_team'])
             info_df = info_df_grouped.mean().reset_index()
@@ -99,3 +105,10 @@ the_odds_api_league_code = {DCEnum.PREMIER_LEAGUE: 'soccer_epl',
                             DCEnum.ITALY_SERIE_B: 'soccer_italy_serie_b',
                             DCEnum.SPAIN_LA_LIGA: 'soccer_spain_la_liga',
                             DCEnum.SPAIN_SEGUNDA: 'soccer_spain_segunda_division'}
+
+
+def convert_division_code_to_api(division_codes):
+    api_codes = []
+    for code in division_codes:
+        api_codes.append(the_odds_api_league_code[code])
+    return api_codes

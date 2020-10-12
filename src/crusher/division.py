@@ -32,6 +32,24 @@ def create_or_update_market_type():
                                   division_name='league 2')
         Division.create_or_update(session, division_code=DivisionCodeEnum.CONFERENCE,
                                   division_name='conference')
+        Division.create_or_update(session, division_code=DivisionCodeEnum.FRANCE_LEAGUE_1,
+                                  division_name='france league 1')
+        Division.create_or_update(session, division_code=DivisionCodeEnum.GERMANY_BUNDESLIGA,
+                                  division_name='german bundesliga')
+        Division.create_or_update(session, division_code=DivisionCodeEnum.GERMANY_BUNDESLIGA_2,
+                                  division_name='germany bundesliga 2')
+        Division.create_or_update(session, division_code=DivisionCodeEnum.ITALY_SERIE_A,
+                                  division_name='italy serie a')
+        Division.create_or_update(session, division_code=DivisionCodeEnum.ITALY_SERIE_B,
+                                  division_name='italy series b')
+        Division.create_or_update(session, division_code=DivisionCodeEnum.SPAIN_LA_LIGA,
+                                  division_name='spain la liga')
+        Division.create_or_update(session, division_code=DivisionCodeEnum.SPAIN_SEGUNDA,
+                                  division_name='spain segunda')
+        Division.create_or_update(session, division_code=DivisionCodeEnum.UEFA_CHAMPIONS_LEAGUE,
+                                  division_name='uefa champions league')
+        Division.create_or_update(session, division_code=DivisionCodeEnum.UEFA_EUROPA_LEAGUE,
+                                  division_name='uefa europa league')
 
 
 if __name__ == '__main__':
