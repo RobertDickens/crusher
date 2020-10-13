@@ -53,18 +53,22 @@ class BookieOddsCollector:
                 'draw_odds': [],
                 'update_datetime': []}
         for event in odds_data:
+            teams = [team.lower() for team in event['teams']]
             home_team = event['home_team'].lower()
-            away_team = [team for team in event['teams'] if team != home_team][0]
+            away_team = [team for team in teams if team != home_team][0]
+            home_team_ix = teams.index(home_team)
+            away_team_ix = teams.index(away_team)
             match_date = event['commence_time']
             match_date = datetime.datetime.fromtimestamp(match_date)
             match_date = match_date.date()
+            print(match_date)
             for site in event['sites']:
                 rows['site'].append(site['site_nice'].lower())
                 update_datetime = site['last_update']
                 update_datetime = datetime.datetime.fromtimestamp(update_datetime)
                 rows['update_datetime'].append(update_datetime)
-                rows['home_team_odds'].append(site['odds'][self.mkt][0])
-                rows['away_team_odds'].append(site['odds'][self.mkt][1])
+                rows['home_team_odds'].append(site['odds'][self.mkt][home_team_ix])
+                rows['away_team_odds'].append(site['odds'][self.mkt][away_team_ix])
                 rows['draw_odds'].append(site['odds'][self.mkt][2])
                 rows['home_team'].append(home_team)
                 rows['away_team'].append(away_team)

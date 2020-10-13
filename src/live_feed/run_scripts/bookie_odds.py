@@ -2,8 +2,8 @@ import json
 import requests
 from datetime import date
 
-from live_feed.bookie_odds_collector import BookieOddsCollector
-from live_feed.bookie_odds_collector import the_odds_api_league_code
+from live_feed.the_odds_api.bookie_odds_collector import BookieOddsCollector
+from live_feed.the_odds_api.bookie_odds_collector import the_odds_api_league_code
 from crusher.division import DivisionCodeEnum as DCEnum
 
 api_key = 'C:\\Users\\rober\\crusher\\bookie_odds\\api_key.json'
@@ -13,7 +13,7 @@ with open(api_key, 'r') as f:
 
 # --------Config-------- #
 API_KEY = api['api_key']
-SPORT = the_odds_api_league_code[DCEnum.LEAGUE_1]
+SPORT = the_odds_api_league_code[DCEnum.LEAGUE_2]
 REGION = 'uk'
 MARKET = 'h2h'
 SAVE_PATH = 'C:\\Users\\rober\\sport_data\\bookie_odds_prem_league.csv'
@@ -28,4 +28,7 @@ bookie_odds_collector = BookieOddsCollector(api_key=API_KEY,
                                             mkt=MARKET)
 
 save_path = 'C:\\Users\\rober\\sport_data\\bookie_odds.csv'
-bookie_odds_collector.stream_live_odds(log_odds=True, save_path=save_path, match_date_stream_filter=date.today())
+bookie_odds_collector.stream_live_odds(log_odds=True,
+                                       save_path=save_path,
+                                       match_date_stream_filter=date.today(),
+                                       refresh_rate_seconds=600)

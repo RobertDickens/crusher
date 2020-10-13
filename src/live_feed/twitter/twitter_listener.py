@@ -1,5 +1,5 @@
 import tweepy
-from live_feed.authentication import auth
+from live_feed.twitter.authentication import auth
 import playsound
 
 
