@@ -4,6 +4,7 @@ import datetime
 import pandas as pd
 import os
 import time
+from tabulate import tabulate
 
 from crusher.division import DivisionCodeEnum as DCEnum
 
@@ -52,11 +53,11 @@ class BookieOddsCollector:
                 'draw_odds': [],
                 'update_datetime': []}
         for event in odds_data:
-            home_team = event['teams'][0].lower()
-            away_team = event['teams'][1].lower()
+            home_team = event['home_team'].lower()
+            away_team = [team for team in event['teams'] if team != home_team][0]
             match_date = event['commence_time']
             match_date = datetime.datetime.fromtimestamp(match_date)
-            match_date = match_date.date
+            match_date = match_date.date()
             for site in event['sites']:
                 rows['site'].append(site['site_nice'].lower())
                 update_datetime = site['last_update']
@@ -73,7 +74,8 @@ class BookieOddsCollector:
         return df
 
     def stream_live_odds(self, refresh_rate_seconds=60, log_odds=False, save_path=None,
-                         drop_betfair_from_live_stream=True):
+                         drop_betfair_from_live_stream=True, home_team_stream_filter=None,
+                         away_team_stream_filter=None, match_date_stream_filter=None):
         starttime = time.time()
         while True:
             df = self.get_results()
@@ -87,10 +89,19 @@ class BookieOddsCollector:
                 else:
                     df.to_csv(save_path, header=False, mode='a', index=False)
 
-            info_df_grouped = df.groupby(['home_team', 'away_team'])
+            info_df_grouped = df.groupby(['home_team', 'away_team', 'match_date'])
             info_df = info_df_grouped.mean().reset_index()
-            info_df = info_df[['home_team', 'away_team', 'home_team_odds', 'away_team_odds', 'draw_odds']]
-            print(info_df)
+            info_df = info_df[['home_team', 'away_team', 'match_date',
+                               'home_team_odds', 'away_team_odds', 'draw_odds']]
+            odds_columns = ['home_team_odds', 'away_team_odds', 'draw_odds']
+            info_df[odds_columns] = info_df[odds_columns].round(2)
+            if home_team_stream_filter:
+                info_df = info_df[info_df['home_team'] == home_team_stream_filter]
+            if away_team_stream_filter:
+                info_df = info_df[info_df['away_team'] == away_team_stream_filter]
+            if match_date_stream_filter:
+                info_df = info_df[info_df['match_date'] == match_date_stream_filter]
+            print(tabulate(info_df, headers='keys', tablefmt='psql'))
             time.sleep(refresh_rate_seconds - ((time.time() - starttime) % refresh_rate_seconds))
 
 
