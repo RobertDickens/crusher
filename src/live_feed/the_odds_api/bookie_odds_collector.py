@@ -61,7 +61,6 @@ class BookieOddsCollector:
             match_date = event['commence_time']
             match_date = datetime.datetime.fromtimestamp(match_date)
             match_date = match_date.date()
-            print(match_date)
             for site in event['sites']:
                 rows['site'].append(site['site_nice'].lower())
                 update_datetime = site['last_update']
@@ -83,8 +82,6 @@ class BookieOddsCollector:
         starttime = time.time()
         while True:
             df = self.get_results()
-            if drop_betfair_from_live_stream:
-                df = df[df['site'] != 'betfair']
             if log_odds:
                 if not save_path:
                     raise ValueError("Need path to save odds")
@@ -93,11 +90,19 @@ class BookieOddsCollector:
                 else:
                     df.to_csv(save_path, header=False, mode='a', index=False)
 
+            if drop_betfair_from_live_stream:
+                df = df[df['site'] != 'betfair']
             info_df_grouped = df.groupby(['home_team', 'away_team', 'match_date'])
-            info_df = info_df_grouped.mean().reset_index()
+            info_df = info_df_grouped.agg(func=['mean', 'std'])
+            info_df.columns = list(map('_'.join, info_df.columns.values))
+            info_df = info_df.reset_index()
             info_df = info_df[['home_team', 'away_team', 'match_date',
-                               'home_team_odds', 'away_team_odds', 'draw_odds']]
-            odds_columns = ['home_team_odds', 'away_team_odds', 'draw_odds']
+                               'home_team_odds_mean', 'home_team_odds_std',
+                               'away_team_odds_mean', 'away_team_odds_std',
+                               'draw_odds_mean', 'draw_odds_std']]
+            odds_columns = ['home_team_odds_mean', 'home_team_odds_std',
+                            'away_team_odds_mean', 'away_team_odds_std',
+                            'draw_odds_mean', 'draw_odds_std']
             info_df[odds_columns] = info_df[odds_columns].round(2)
             if home_team_stream_filter:
                 info_df = info_df[info_df['home_team'] == home_team_stream_filter]

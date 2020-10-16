@@ -13,7 +13,7 @@ with open(api_key, 'r') as f:
 
 # --------Config-------- #
 API_KEY = api['api_key']
-SPORT = the_odds_api_league_code[DCEnum.LEAGUE_2]
+SPORT = the_odds_api_league_code[DCEnum.FRANCE_LEAGUE_1]
 REGION = 'uk'
 MARKET = 'h2h'
 SAVE_PATH = 'C:\\Users\\rober\\sport_data\\bookie_odds_prem_league.csv'
@@ -27,8 +27,8 @@ bookie_odds_collector = BookieOddsCollector(api_key=API_KEY,
                                             region=REGION,
                                             mkt=MARKET)
 
-save_path = 'C:\\Users\\rober\\sport_data\\bookie_odds.csv'
+save_path = 'C:\\Users\\rober\\sport_data\\bookie_odds_2020_10_16.csv'
 bookie_odds_collector.stream_live_odds(log_odds=True,
                                        save_path=save_path,
                                        match_date_stream_filter=date.today(),
-                                       refresh_rate_seconds=600)
+                                       refresh_rate_seconds=300)
