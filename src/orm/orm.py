@@ -59,7 +59,6 @@ class Team(Base):
                       primary_key=True)
     team_name = Column(String)
     country_uid = Column(Integer, ForeignKey(Country.country_uid))
-    creation_datetime = Column(DateTime, default=datetime.utcnow())
 
     country = relationship('Country', back_populates='team')
     event_team_a = relationship('Event', back_populates='team_a', foreign_keys="[Event.team_a_uid]")
@@ -125,6 +124,34 @@ class Division(Base):
             session.commit()
             division = cls.get_by_alternate_key(session, division_code=division_code)
             return division, False
+
+
+class Sport(Base):
+    __tablename__ = tb.sport()
+    sport_uid = Column(Integer, Sequence(tb.sport() + '_sport_uid_seq', schema='public'),
+                       primary_key=True)
+    sport_code = Column(String)
+    sport_name = Column(String)
+
+    @classmethod
+    def get_by_uid(cls, session, uid):
+        return session.query(cls).get(uid)
+
+    @classmethod
+    def get_by_alternate_key(cls, session, sport_code):
+        return session.query(cls).filter_by(sport_code=sport_code).one()
+
+    @classmethod
+    def create_or_update(cls, session, sport_code, sport_name):
+        try:
+            sport = cls.get_by_alternate_key(session, sport_code=sport_code)
+            return sport, True
+        except Exception:
+            session.add(cls(sport_code=sport_code,
+                            sport_name=sport_name))
+            session.commit()
+            sport = cls.get_by_alternate_key(session, sport_code=sport_code)
+            return sport, False
 
 
 class Event(Base):

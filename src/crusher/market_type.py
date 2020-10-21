@@ -7,6 +7,7 @@ class MarketTypeCodeEnum(CustomEnum):
     CORRECT_SCORE = 'CORRECT_SCORE'
     OVER_UNDER_GOALS = 'OVER_UNDER_GOALS'
     MATCH_ODDS = 'MATCH_ODDS'
+    WIN = 'WIN'
 
 
 def create_or_update_market_type():
@@ -17,6 +18,8 @@ def create_or_update_market_type():
                                     market_type_desc='correct final match score')
         MarketType.create_or_update(session, market_type_code=MarketTypeCodeEnum.MATCH_ODDS,
                                     market_type_desc='match result odds')
+        MarketType.create_or_update(session, market_type_code=MarketTypeCodeEnum.WIN,
+                                    market_type_desc='horse racing win')
 
 
 if __name__ == '__main__':

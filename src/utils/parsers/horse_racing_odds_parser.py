@@ -55,7 +55,7 @@ class HorseRacingExchangeOddsExtractor:
                                columns=list(market_data['runner_ids'].values()))
         for published_datetime, price_change in self.price_changes:
             for rc in price_change['rc']:
-                if rc['ltp'] < 800 and rc['ltp'] != 0:
+                if rc['ltp'] < 1001 and rc['ltp'] != 0:
                     odds_df.at[published_datetime, market_data['runner_ids'][rc['id']]] = rc['ltp']
 
         # Get traded volume for all runners
@@ -90,7 +90,7 @@ class HorseRacingExchangeOddsExtractor:
 
         runner_ids = {}
         for runner in runners:
-            runner_ids[runner['sortPriority']] = horse_racing_runner_map[runner['sortPriority']]
+            runner_ids[runner['id']] = horse_racing_runner_map[runner['sortPriority']]
 
         # for data_item in [event_ids, event_names, country_codes, market_ids, market_types]:
         #     self._check_consistent_meta(data_item)

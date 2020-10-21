@@ -60,3 +60,7 @@ def result():
 
 def bookie():
     return 'bookie'
+
+
+def sport():
+    return 'sport'
