@@ -56,3 +56,7 @@ def division():
 
 def result():
     return 'result'
+
+
+def bookie():
+    return 'bookie'

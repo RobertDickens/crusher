@@ -7,7 +7,7 @@ from crusher.market_type import MarketTypeCodeEnum as MTCEnum
 from crusher.item_freq_type import ItemFreqTypeCodeEnum as IFTCEnum
 from crusher.runner import RunnerCodeEnum as RCEnum
 from crusher.info_source import InfoSourceEnum as ISEnum
-from crusher.runner import runner_betfair_map
+from crusher.runner import football_runner_betfair_map
 from utils.parsers.odds_parser import ExchangeOddsExtractor
 from utils.db import db_table_names as tb
 
@@ -41,7 +41,7 @@ for month in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oc
                     items_df = items_df.rename(columns={'index': 'published_datetime',
                                                         'value': 'ltp',
                                                         'variable': 'runner_code'})
-                    items_df['runner_code'] = items_df['runner_code'].apply(lambda c: runner_betfair_map[c])
+                    items_df['runner_code'] = items_df['runner_code'].apply(lambda c: football_runner_betfair_map[c])
                     items_df['runner_uid'] = items_df['runner_code'].apply(lambda c: runner_uid_from_code_map[c])
                     items_df = items_df.drop('runner_code', axis=1)
                     items_df['series_uid'] = series.series_uid

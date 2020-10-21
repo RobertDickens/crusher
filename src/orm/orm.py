@@ -577,6 +577,45 @@ class Result(Base):
             return result, False
 
 
+class Bookie(Base):
+    __tablename__ = tb.bookie()
+
+    bookie_uid = Column(Integer, Sequence(tb.bookie() + '_bookie_uid_seq', schema='public'),
+                        primary_key=True)
+    bookie_code = Column(String)
+    bookie_name = Column(String)
+
+    @classmethod
+    def get_by_uid(cls, session, uid):
+        return session.query(cls).get(uid)
+
+    @classmethod
+    def get_by_name(cls, session, bookie_name):
+        return session.query(cls).filter_by(country_name=bookie_name).one()
+
+    @classmethod
+    def get_by_code(cls, session, bookie_code):
+        return session.query(cls).filter_by(country_code=bookie_code).one()
+
+    @classmethod
+    def get_by_alternate_key(cls, session, bookie_code, bookie_name):
+        return session.query(cls).filter_by(country_name=bookie_code,
+                                            country_code=bookie_name).one()
+
+    @classmethod
+    def create_or_update(cls, session, bookie_code, bookie_name):
+        try:
+            bookie = cls.get_by_alternate_key(session, bookie_code=bookie_code,
+                                               bookie_name=bookie_name)
+            return bookie, True
+        except Exception:
+            session.add(cls(bookie_code=bookie_code, bookie_name=bookie_name))
+            session.commit()
+            bookie = cls.get_by_alternate_key(session, bookie_code=bookie_code,
+                                              bookie_name=bookie_name)
+            return bookie, False
+
+
 def filter_by_list_or_str(cls, attr, query, val):
     if isinstance(val, list):
         query = query.filter(getattr(cls, attr).in_(val))

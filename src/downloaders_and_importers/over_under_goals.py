@@ -7,7 +7,7 @@ from crusher.market_type import MarketTypeCodeEnum as MTCEnum
 from crusher.item_freq_type import ItemFreqTypeCodeEnum as IFTCEnum
 from crusher.runner import RunnerCodeEnum as RCEnum
 from crusher.info_source import InfoSourceEnum as ISEnum
-from crusher.runner import runner_betfair_map
+from crusher.runner import football_runner_betfair_map
 from utils.parsers.odds_parser import ExchangeOddsExtractor
 from utils.db import db_table_names as tb
 

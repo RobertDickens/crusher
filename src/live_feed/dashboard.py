@@ -11,8 +11,8 @@ from crusher.division import DivisionCodeEnum as DCEnum
 
 
 def twitter_listener():
-    listen_for_teams([tw.ManchesterCity,
-                      tw.ArsenalFC,
+    listen_for_teams([tw.SheffieldUtd,
+                      tw.FulhamFC,
                       tw.EvertonFC,
                       tw.LiverpoolFC,
                       tw.NewcastleUtd,
@@ -38,10 +38,10 @@ def bookie_odds_streamer():
                                                 region=REGION,
                                                 mkt=MARKET)
 
-    save_path = 'C:\\Users\\rober\\sport_data\\bookie_odds_2020_10_16.csv'
+    save_path = 'C:\\Users\\rober\\sport_data\\bookie_odds_2020_10_17.csv'
     bookie_odds_collector.stream_live_odds(log_odds=False,
                                            save_path=save_path,
-                                           match_date_stream_filter=date(2020, 10, 17),
+                                           match_date_stream_filter=date(2020, 10, 18),
                                            refresh_rate_seconds=300)
 
 
