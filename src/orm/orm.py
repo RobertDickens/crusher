@@ -1,7 +1,8 @@
 from datetime import datetime
 
 import pandas as pd
-from sqlalchemy import Column, Integer, String, Numeric, Sequence, Boolean, DateTime, ForeignKey, or_, func, Date
+from sqlalchemy import Column, Integer, String, Numeric, Sequence, Boolean, DateTime, ForeignKey, or_, func, Date, \
+    extract
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -163,9 +164,8 @@ class Event(Base):
     team_a_uid = Column(Integer, ForeignKey(Team.team_uid), unique=True)
     team_b_uid = Column(Integer, ForeignKey(Team.team_uid), unique=True)
     division_code = Column(String, ForeignKey(Division.division_code))
-    in_play_start = Column(DateTime)
     match_date = Column(Date)
-    creation_datetime = Column(DateTime, default=datetime.utcnow())
+    sport_code = Column(String)
 
     team_a = relationship("Team", back_populates="event_team_a", foreign_keys=[team_a_uid])
     team_b = relationship("Team", back_populates="event_team_b", foreign_keys=[team_b_uid])
@@ -185,9 +185,9 @@ class Event(Base):
 
     @classmethod
     def get_by_alternate_key(cls, session, event_betfair_id,
-                             team_a, team_b, division=None):
+                             team_a, team_b, division=None, sport_code=None):
         return session.query(cls).filter_by(event_betfair_id=event_betfair_id,
-                                            team_a=team_a, team_b=team_b).one()
+                                            team_a=team_a, team_b=team_b, sport_code=sport_code).one()
 
     @classmethod
     def get_events_for_analysis(cls, session, event_befair_id=None, team_a=None,
@@ -220,17 +220,18 @@ class Event(Base):
 
     @classmethod
     def create_or_update(cls, session, event_betfair_id,
-                         team_a, team_b, in_play_start):
+                         team_a, team_b, sport_code):
         try:
             event = cls.get_by_alternate_key(session, event_betfair_id=event_betfair_id,
-                                             team_a=team_a, team_b=team_b)
+                                             team_a=team_a, team_b=team_b, sport_code=sport_code)
             return event, True
         except Exception:
             session.add(cls(event_betfair_id=event_betfair_id,
-                            team_a=team_a, team_b=team_b, in_play_start=in_play_start))
+                            team_a=team_a, team_b=team_b,
+                            sport_code=sport_code))
             session.commit()
             event = cls.get_by_alternate_key(session, event_betfair_id=event_betfair_id,
-                                             team_a=team_a, team_b=team_b)
+                                             team_a=team_a, team_b=team_b, sport_code=sport_code)
             return event, False
 
 
@@ -274,6 +275,9 @@ class Market(Base):
     event_uid = Column(Integer, ForeignKey(Event.event_uid))
     market_betfair_id = Column(String)
     market_type_code = Column(String, ForeignKey(MarketType.market_type_code))
+    pre_off_volume = Column(Numeric)
+    total_volume = Column(Numeric)
+    off_time = Column(DateTime)
     creation_datetime = Column(DateTime, default=datetime.utcnow())
 
     event = relationship("Event", back_populates="market")
@@ -299,7 +303,8 @@ class Market(Base):
                                             market_type_code=market_type_code).one()
 
     @classmethod
-    def create_or_update(cls, session, market_betfair_id, event, market_type_code):
+    def create_or_update(cls, session, market_betfair_id, event, market_type_code, pre_off_volume=None,
+                         total_volume=None, off_time=None):
         try:
             market = cls.get_by_alternate_key(session, market_betfair_id=market_betfair_id,
                                               event=event, market_type_code=market_type_code)
@@ -307,7 +312,10 @@ class Market(Base):
         except Exception:
             session.add(cls(market_betfair_id=market_betfair_id,
                             event=event,
-                            market_type_code=market_type_code))
+                            market_type_code=market_type_code,
+                            pre_off_volume=pre_off_volume,
+                            total_volume=total_volume,
+                            off_time=off_time))
             session.commit()
             market = cls.get_by_alternate_key(session, market_betfair_id=market_betfair_id,
                                               event=event,
@@ -499,9 +507,10 @@ class ExchangeOddsSeriesItem(Base):
     series_item_uid = Column(Integer, Sequence(tb.exchange_odds_series_item() + '_uid_seq', schema='public'),
                              primary_key=True)
     series_uid = Column(Integer, ForeignKey(ExchangeOddsSeries.series_uid))
-    runner_uid = Column(Integer)
+    runner_uid = Column(Integer, ForeignKey(Runner.runner_uid))
     ltp = Column(Numeric)
     in_play = Column(Boolean)
+    traded_volume = Column(Numeric)
     published_datetime = Column(DateTime)
 
     exchange_odds_series = relationship('ExchangeOddsSeries', back_populates='item')
@@ -525,20 +534,37 @@ class ExchangeOddsSeriesItem(Base):
                   if_exists='append', method='multi')
 
     @classmethod
-    def get_series_items_df(cls, session, runner_uid=None, market_uid=None, event_uid=None,
-                            in_play=None, division_code=None, item_freq_type_code=None,
-                            market_type_code=None):
+    def get_series_items_df(cls, session, runner_codes=None, markets=None, market_type_code=None,
+                            in_play=None, division_codes=None, item_freq_type_code=None,
+                            min_market_total_volume=None, min_market_pre_off_volume=None,
+                            max_mins_from_off_time=None):
         query = session.query(cls).join(ExchangeOddsSeries)
-        if runner_uid:
-            query = query.filter(cls.runner_uid == runner_uid)
-        if market_uid:
-            query = filter_by_list_or_str(cls, attr='market_uid', query=query, val=market_uid)
+        # Runner filters
+        if runner_codes:
+            query = safe_join(query, Runner)
+            query = query.filter(Runner.runner_code.in_(runner_codes))
+
+        # Market filters
+        if markets:
+            query = safe_join(query, Market)
+            query.filter(Market.mar)
         if market_type_code:
             query = query.join(Market).filter(Market.market_type_code == market_type_code)
-        if division_code:
-            query = query.join(Event).filter(Event.division_code.in_(division_code))
+        if min_market_pre_off_volume:
+            query = safe_join(query, Market).filter(Market.pre_off_volume >= min_market_pre_off_volume)
+        if min_market_total_volume:
+            query = safe_join(query, Market).filter(Market.total_volume >= min_market_total_volume)
+
+        # Division filters
+        if division_codes:
+            query = query.join(Event).filter(Event.division_code.in_(division_codes))
+
+        # Time and frequency filters
         if in_play is not None:
             query = query.filter(cls.in_play == in_play)
+        if max_mins_from_off_time:
+            query = safe_join(query, Event)
+            query = query.filter(func.trunc((extract('epoch', cls.published_datetime) - extract('epoch', Event.in_play_start))/ 60) < max_mins_from_off_time)
         if item_freq_type_code:
             query = query.filter(ExchangeOddsSeries.item_freq_type_code == item_freq_type_code)
 
@@ -653,3 +679,12 @@ def filter_by_list_or_str(cls, attr, query, val):
         raise ValueError("must be string or list")
 
     return query
+
+
+def safe_join(query, table):
+    """Joins a table if it is not already joined in the query to prevent errors"""
+    joined_tables = [mapper.class_ for mapper in query._join_entities]
+    if table not in joined_tables:
+        return query.join(table)
+    else:
+        return query

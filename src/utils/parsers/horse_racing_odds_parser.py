@@ -27,7 +27,7 @@ class HorseRacingExchangeOddsExtractor:
             for line in fp:
                 data = json.loads(line)
                 published_time = datetime.datetime.fromtimestamp(data['pt'] / 1000)
-                published_time = published_time.replace(second=0, microsecond=0)
+                published_time = published_time.replace(microsecond=0)
                 data = json.loads(line)
                 market_changes = data['mc']
                 for market_change in market_changes:

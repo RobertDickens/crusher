@@ -46,6 +46,10 @@ class RunnerCodeEnum(CustomEnum):
     EIGTH_FAVOURTE = 'EIGTH_FAVOURTE'
     NINTH_FAVOURITE = 'NINTH_FAVOURITE'
     TENTH_FAVOURITE = 'TENTH_FAVOURITE'
+    ELEVENTH_FAVOURITE = 'ELEVENTH_FAVOURITE'
+    TWELFTH_FAVOURITE = 'TWELFTH_FAVOURITE'
+    THIRTEENTH_FAVOURITE = 'THIRTEENTH_FAVOURITE'
+    FOURTEENTH_FAVOURITE = 'FOURTEENTH_FAVOURITE'
 
 
 horse_racing_runner_map = {1: RunnerCodeEnum.FAVOURITE,
@@ -57,7 +61,11 @@ horse_racing_runner_map = {1: RunnerCodeEnum.FAVOURITE,
                            7: RunnerCodeEnum.SEVENTH_FAVOURITE,
                            8: RunnerCodeEnum.EIGTH_FAVOURTE,
                            9: RunnerCodeEnum.NINTH_FAVOURITE,
-                           10: RunnerCodeEnum.TENTH_FAVOURITE}
+                           10: RunnerCodeEnum.TENTH_FAVOURITE,
+                           11: RunnerCodeEnum.ELEVENTH_FAVOURITE,
+                           12: RunnerCodeEnum.TWELFTH_FAVOURITE,
+                           13: RunnerCodeEnum.THIRTEENTH_FAVOURITE,
+                           14: RunnerCodeEnum.FOURTEENTH_FAVOURITE}
 
 football_runner_betfair_map = {'0 - 0': RunnerCodeEnum.SCORE_0_0,
                                '1 - 0': RunnerCodeEnum.SCORE_1_0,
@@ -97,7 +105,11 @@ football_runner_betfair_map = {'0 - 0': RunnerCodeEnum.SCORE_0_0,
                                '7': RunnerCodeEnum.SEVENTH_FAVOURITE,
                                '8': RunnerCodeEnum.EIGTH_FAVOURTE,
                                '9': RunnerCodeEnum.NINTH_FAVOURITE,
-                               '10': RunnerCodeEnum.TENTH_FAVOURITE
+                               '10': RunnerCodeEnum.TENTH_FAVOURITE,
+                               '11': RunnerCodeEnum.ELEVENTH_FAVOURITE,
+                               '12': RunnerCodeEnum.TWELFTH_FAVOURITE,
+                               '13': RunnerCodeEnum.THIRTEENTH_FAVOURITE,
+                               '14': RunnerCodeEnum.FOURTEENTH_FAVOURITE,
                                }
 
 inverse_runner_betfair_map = {v: k for k, v in football_runner_betfair_map.items()}
