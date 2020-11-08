@@ -507,10 +507,8 @@ class ExchangeOddsSeriesItem(Base):
     series_item_uid = Column(Integer, Sequence(tb.exchange_odds_series_item() + '_uid_seq', schema='public'),
                              primary_key=True)
     series_uid = Column(Integer, ForeignKey(ExchangeOddsSeries.series_uid))
-    runner_uid = Column(Integer, ForeignKey(Runner.runner_uid))
-    ltp = Column(Numeric)
+    update_json = Column(String)
     in_play = Column(Boolean)
-    traded_volume = Column(Numeric)
     published_datetime = Column(DateTime)
 
     exchange_odds_series = relationship('ExchangeOddsSeries', back_populates='item')

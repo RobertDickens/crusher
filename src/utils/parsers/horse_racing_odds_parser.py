@@ -51,20 +51,27 @@ class HorseRacingExchangeOddsExtractor:
 
         # Get odds changes for all runners
         all_unique_datetimes = list(set([x[0] for x in self.price_changes]))
-        odds_df = pd.DataFrame(np.nan, index=pd.DatetimeIndex(all_unique_datetimes),
-                               columns=list(market_data['runner_ids'].values()))
-        for published_datetime, price_change in self.price_changes:
-            for rc in price_change['rc']:
-                if rc['ltp'] < 1001 and rc['ltp'] != 0:
-                    odds_df.at[published_datetime, market_data['runner_ids'][rc['id']]] = rc['ltp']
+        updates = {str(dt): {'ltp': [], 'tv': []} for dt, _ in self.price_changes}
+        update_datetimes = []
+        for published_datetime, info_dict in self.price_changes:
+            for rc in info_dict['rc']:
+                datetime_str = str(published_datetime)
+                updates[datetime_str]['ltp'].append({str(market_data['runner_ids'][rc['id']]): str(rc['ltp'])})
+                updates[datetime_str]['tv'].append({str(market_data['runner_ids'][rc['id']]): str(rc['tv'])})
+        df = pd.DataFrame({'published_datetime': [d for d in updates.keys()],
+                           'update_json': [json.dumps(u) for u in updates.values()]})
 
-        # Get traded volume for all runners
-        volume_df = odds_df.copy(deep=True)
+        # calculate pre-off and total volume
+        volume_df = pd.DataFrame(np.nan, index=pd.DatetimeIndex(all_unique_datetimes),
+                                 columns=list(market_data['runner_ids'].values()))
         for published_datetime, price_change in self.price_changes:
             for rc in price_change['rc']:
                 volume_df.at[published_datetime, market_data['runner_ids'][rc['id']]] = rc['tv']
+        pre_off_volume = volume_df.loc[volume_df.index < event_data['off_time']]
+        total_pre_off_volume = pre_off_volume.max(axis=0).sum()
+        total_volume = volume_df.max(axis=0).sum()
 
-        return event_data, market_data, odds_df, volume_df
+        return event_data, market_data, df, total_pre_off_volume, total_volume
 
     def _get_event_and_market_data(self):
         event_names = []
@@ -90,7 +97,7 @@ class HorseRacingExchangeOddsExtractor:
 
         runner_ids = {}
         for runner in runners:
-            runner_ids[runner['id']] = horse_racing_runner_map[runner['sortPriority']]
+            runner_ids[runner['id']] = runner['sortPriority']
 
         # for data_item in [event_ids, event_names, country_codes, market_ids, market_types]:
         #     self._check_consistent_meta(data_item)
@@ -112,3 +119,7 @@ class HorseRacingExchangeOddsExtractor:
         if len(set(data)) != 1:
             raise ValueError("More than one eventname/id in market definition changes for single"
                              " data set")
+
+    @staticmethod
+    def _odds_to_dict_string(uid, val):
+        return str(uid) + ': ' + str(val)
