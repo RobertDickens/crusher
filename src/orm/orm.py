@@ -508,7 +508,6 @@ class ExchangeOddsSeriesItem(Base):
                              primary_key=True)
     series_uid = Column(Integer, ForeignKey(ExchangeOddsSeries.series_uid))
     update_json = Column(String)
-    in_play = Column(Boolean)
     published_datetime = Column(DateTime)
 
     exchange_odds_series = relationship('ExchangeOddsSeries', back_populates='item')
@@ -532,21 +531,21 @@ class ExchangeOddsSeriesItem(Base):
                   if_exists='append', method='multi')
 
     @classmethod
-    def get_series_items_df(cls, session, runner_codes=None, markets=None, market_type_code=None,
-                            in_play=None, division_codes=None, item_freq_type_code=None,
+    def get_series_items_df(cls, session, from_date=None, until_date=None, market_type_code=None,
+                            division_codes=None, item_freq_type_code=None,
                             min_market_total_volume=None, min_market_pre_off_volume=None,
                             max_mins_from_off_time=None):
         query = session.query(cls).join(ExchangeOddsSeries)
-        # Runner filters
-        if runner_codes:
-            query = safe_join(query, Runner)
-            query = query.filter(Runner.runner_code.in_(runner_codes))
-
-        # Market filters
-        if markets:
+        # Event data filters
+        if from_date:
             query = safe_join(query, Market)
-            query.filter(Market.mar)
+            query = query.filter(Market.off_time >= from_date)
+        if until_date:
+            query = safe_join(query, Market)
+            query = query.filter(Market.off_time < until_date)
+        # Market filters
         if market_type_code:
+            query = safe_join(query, Market)
             query = query.join(Market).filter(Market.market_type_code == market_type_code)
         if min_market_pre_off_volume:
             query = safe_join(query, Market).filter(Market.pre_off_volume >= min_market_pre_off_volume)
@@ -558,11 +557,9 @@ class ExchangeOddsSeriesItem(Base):
             query = query.join(Event).filter(Event.division_code.in_(division_codes))
 
         # Time and frequency filters
-        if in_play is not None:
-            query = query.filter(cls.in_play == in_play)
         if max_mins_from_off_time:
-            query = safe_join(query, Event)
-            query = query.filter(func.trunc((extract('epoch', cls.published_datetime) - extract('epoch', Event.in_play_start))/ 60) < max_mins_from_off_time)
+            query = safe_join(query, Market)
+            query = query.filter(func.trunc((extract('epoch', Market.off_time) - extract('epoch', cls.published_datetime))/ 60) < max_mins_from_off_time)
         if item_freq_type_code:
             query = query.filter(ExchangeOddsSeries.item_freq_type_code == item_freq_type_code)
 

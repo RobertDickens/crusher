@@ -14,7 +14,7 @@ from crusher.info_source import InfoSourceEnum as ISEnum
 from utils.db import db_table_names as tb
 
 n_rows = 0
-for month in ['Jan']:
+for month in ['Jan', 'Feb', 'Mar']:
     root_dir = "C:\\Users\\rober\\sport_data\\horse_racing\\ADVANCED\\2020\\"
     root_dir = os.path.join(root_dir, month)
     for subdir, dirs, files in os.walk(root_dir):
@@ -35,9 +35,7 @@ for month in ['Jan']:
                         series, _ = ExchangeOddsSeries.create_or_update(session, event=event, market=market,
                                                                         item_freq_type_code=IFTCEnum.SECOND,
                                                                         info_source_code=ISEnum.EXCHANGE_HISTORICAL)
-                        df['in_play'] = df['published_datetime'] >= event_data['off_time']
                         df['series_uid'] = series.series_uid
-                        df['creation_datetime'] = datetime.utcnow()
                         df.to_sql(name=tb.exchange_odds_series_item(), schema='public',
                                   con=session.connection(),
                                   if_exists='append', method='multi', index=False)

@@ -44,21 +44,21 @@ class HorseRacingExchangeOddsExtractor:
             self.price_changes = price_changes
             self.traded_volume = traded_volume
 
-    def extract_data(self):
+    def extract_data(self, in_play=False):
         """Extract data from a bz2 file"""
         self._categorise_market_changes()
         event_data, market_data = self._get_event_and_market_data()
 
         # Get odds changes for all runners
         all_unique_datetimes = list(set([x[0] for x in self.price_changes]))
-        updates = {str(dt): {'ltp': [], 'tv': []} for dt, _ in self.price_changes}
-        update_datetimes = []
+        updates = {str(dt): {'ltp': {}, 'tv': {}} for dt, _ in self.price_changes}
         for published_datetime, info_dict in self.price_changes:
             for rc in info_dict['rc']:
                 datetime_str = str(published_datetime)
-                updates[datetime_str]['ltp'].append({str(market_data['runner_ids'][rc['id']]): str(rc['ltp'])})
-                updates[datetime_str]['tv'].append({str(market_data['runner_ids'][rc['id']]): str(rc['tv'])})
-        df = pd.DataFrame({'published_datetime': [d for d in updates.keys()],
+                updates[datetime_str]['ltp'][str(market_data['runner_ids'][rc['id']])] = str(rc['ltp'])
+                updates[datetime_str]['tv'][str(market_data['runner_ids'][rc['id']])] = str(rc['tv'])
+        df = pd.DataFrame({'published_datetime': [datetime.datetime.strptime(d, '%Y-%m-%d %H:%M:%S')
+                                                  for d in updates.keys()],
                            'update_json': [json.dumps(u) for u in updates.values()]})
 
         # calculate pre-off and total volume
@@ -70,6 +70,7 @@ class HorseRacingExchangeOddsExtractor:
         pre_off_volume = volume_df.loc[volume_df.index < event_data['off_time']]
         total_pre_off_volume = pre_off_volume.max(axis=0).sum()
         total_volume = volume_df.max(axis=0).sum()
+        df = df.loc[df['published_datetime'] < event_data['off_time']]
 
         return event_data, market_data, df, total_pre_off_volume, total_volume
 
