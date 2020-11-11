@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pandas as pd
-from sqlalchemy import Column, Integer, String, Numeric, Sequence, Boolean, DateTime, ForeignKey, or_, func, Date, \
+from sqlalchemy import Column, Integer, String, Numeric, Sequence, DateTime, ForeignKey, func, Date, \
     extract
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -185,7 +185,7 @@ class Event(Base):
 
     @classmethod
     def get_by_alternate_key(cls, session, event_betfair_id,
-                             team_a, team_b, division=None, sport_code=None):
+                             team_a, team_b, sport_code=None):
         return session.query(cls).filter_by(event_betfair_id=event_betfair_id,
                                             team_a=team_a, team_b=team_b, sport_code=sport_code).one()
 
@@ -654,7 +654,7 @@ class Bookie(Base):
     def create_or_update(cls, session, bookie_code, bookie_name):
         try:
             bookie = cls.get_by_alternate_key(session, bookie_code=bookie_code,
-                                               bookie_name=bookie_name)
+                                              bookie_name=bookie_name)
             return bookie, True
         except Exception:
             session.add(cls(bookie_code=bookie_code, bookie_name=bookie_name))
