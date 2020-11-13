@@ -5,7 +5,7 @@ from datetime import datetime
 
 from utils.db.database_manager import dbm
 from utils.parsers.horse_racing_odds_parser import HorseRacingExchangeOddsExtractor
-from orm.orm import Team, Country, Event, Market, ExchangeOddsSeries, Runner
+from orm.orm import Team, Country, Event, Market, ExchangeOddsSeries, Runner, MarketLocation
 from crusher.market_type import MarketTypeCodeEnum as MTCEnum
 from crusher.sport import SportCodeEnum as SCEnum
 from crusher.item_freq_type import ItemFreqTypeCodeEnum as IFTCEnum
@@ -28,9 +28,15 @@ for month in ['Jan', 'Feb', 'Mar']:
                         event_data, market_data, df, total_pre_off_volume, total_volume = extractor.extract_data()
                         event, _ = Event.create_or_update(session, event_data['event_id'], team_a=None, team_b=None,
                                                           sport_code=SCEnum.HORSE_RACING)
+                        market_location_name = market_data['venue'].lower()
+                        market_location_code = market_data['venue'].upper()
+                        market_location_code = market_location_code.replace(' ', '_')
+                        market_location = MarketLocation.create_or_update(session, market_location_code=None,
+                                                                          market_location_name=None)
                         market, existed = Market.create_or_update(session, market_betfair_id=str(market_data['market_id']),
                                                                   market_type_code=MTCEnum.WIN, event=event,
-                                                                  pre_off_volume=total_pre_off_volume, total_volume=total_volume,
+                                                                  pre_off_volume=total_pre_off_volume,
+                                                                  total_volume=total_volume,
                                                                   off_time=event_data['off_time'])
                         series, _ = ExchangeOddsSeries.create_or_update(session, event=event, market=market,
                                                                         item_freq_type_code=IFTCEnum.SECOND,

@@ -64,3 +64,7 @@ def bookie():
 
 def sport():
     return 'sport'
+
+
+def market_location():
+    return 'market_location'

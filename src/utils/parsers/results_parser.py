@@ -77,8 +77,6 @@ class ResultsParser:
         for runner in runners:
             runner_ids[runner['id']] = runner['name']
 
-
-
         for data_item in [event_ids, event_names, country_codes, market_ids, market_types]:
             self._check_consistent_meta(data_item)
 

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import json
+import matplotlib.pyplot as plt
 
 from orm.orm import ExchangeOddsSeriesItem, Runner, MarketType
 from utils.helper_functions import preprocessing as pr

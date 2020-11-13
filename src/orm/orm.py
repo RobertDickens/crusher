@@ -323,6 +323,36 @@ class Market(Base):
             return market, False
 
 
+class MarketLocation(Base):
+    __tablename__ = tb.market_location()
+
+    market_location_code = Column(String, primary_key=True)
+    market_location_name = Column(String)
+
+    @classmethod
+    def get_by_code(cls, session, code):
+        return session.query(cls).filter_by(market_location_code=code).one()
+
+    @classmethod
+    def get_by_alternate_key(cls, session, market_location_code, market_location_name):
+        return session.query(cls).filter_by(market_location_code=market_location_code,
+                                            market_location_name=market_location_name).one()
+
+    @classmethod
+    def create_or_update(cls, session, market_location_code, market_location_name):
+        try:
+            market_location = cls.get_by_alternate_key(session, market_location_code=market_location_code,
+                                                       market_location_name=market_location_name)
+            return market_location, True
+        except Exception:
+            session.add(cls(market_location_code=market_location_code,
+                            market_location_name=market_location_name))
+            session.commit()
+            market_location = cls.get_by_alternate_key(session, market_location_code=market_location_code,
+                                                       market_location_name=market_location_name)
+            return market_location, False
+
+
 class Runner(Base):
     __tablename__ = tb.runner()
 

@@ -4,7 +4,6 @@ import datetime
 
 import numpy as np
 import pandas as pd
-from crusher.runner import horse_racing_runner_map
 
 
 class HorseRacingExchangeOddsExtractor:
@@ -80,6 +79,7 @@ class HorseRacingExchangeOddsExtractor:
         market_ids = []
         country_codes = []
         market_types = []
+        venues = []
         in_play_start_datetime = None
         runners = None
         for published_time, market_definition_change in self.definition_changes:
@@ -90,6 +90,7 @@ class HorseRacingExchangeOddsExtractor:
             event_ids.append(market_definition_change['marketDefinition']['eventId'])
             country_codes.append(market_definition_change['marketDefinition']['countryCode'])
             market_types.append(market_definition_change['marketDefinition']['marketType'])
+            venues.append(market_definition_change['marketDefinition']['venue'])
             if market_definition_change['marketDefinition']['inPlay'] is True and in_play_start_datetime is None:
                 in_play_start_datetime = published_time
 
@@ -100,7 +101,7 @@ class HorseRacingExchangeOddsExtractor:
         for runner in runners:
             runner_ids[runner['id']] = runner['sortPriority']
 
-        # for data_item in [event_ids, event_names, country_codes, market_ids, market_types]:
+        # for data_item in [venues, event_names, country_codes, market_ids, market_types]:
         #     self._check_consistent_meta(data_item)
 
         event_data = {'event_name': event_names[0],
@@ -111,6 +112,7 @@ class HorseRacingExchangeOddsExtractor:
 
         market_data = {'market_id': market_ids[0],
                        'market_type': market_types[0],
+                       'venue': venues[0],
                        'runner_ids': runner_ids}
 
         return event_data, market_data
