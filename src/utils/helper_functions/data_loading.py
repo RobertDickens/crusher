@@ -4,6 +4,7 @@ from datetime import datetime
 import json
 import matplotlib.pyplot as plt
 
+from crusher.runner import RunnerCodeEnum as RCEnum
 from orm.orm import ExchangeOddsSeriesItem, Runner, MarketType
 from utils.helper_functions import preprocessing as pr
 from crusher.market_type import MarketTypeCodeEnum as MTCEnum
@@ -14,7 +15,8 @@ from crusher.runner import horse_racing_runner_map
 def get_processed_horse_racing_odds(runner_codes=None, from_date=None, until_date=None,
                                     market_type_code=None, division_codes=None,
                                     item_freq_type_code=None, min_market_total_volume=None,
-                                    min_market_pre_off_volume=None, max_mins_from_off_time=None):
+                                    min_market_pre_off_volume=None, max_mins_from_off_time=None,
+                                    market_location_code=None):
     """Return dataframe of horse racing odds in a user friendly format
     i.e. with columns as individuals horse odds or volume"""
     with dbm.get_managed_session() as session:
@@ -33,6 +35,7 @@ def get_processed_horse_racing_odds(runner_codes=None, from_date=None, until_dat
                                                         max_mins_from_off_time=max_mins_from_off_time)
         df['update_dict'] = df['update_json'].apply(lambda j: json.loads(j))
         df = df.drop('update_json', axis=1)
+        df = df.sort_values('published_datetime', ascending=True)
 
         # Add ltp and tv columns
         df[[runner_uid for runner_uid in runner_uids]] = np.nan
@@ -40,12 +43,16 @@ def get_processed_horse_racing_odds(runner_codes=None, from_date=None, until_dat
             ltp_col_name = (horse_racing_runner_map[int(runner_uid)] + '_ltp').lower()
             tv_col_name = (horse_racing_runner_map[int(runner_uid)] + '_tv').lower()
             df[ltp_col_name] = df['update_dict'].apply(lambda d: d['ltp'].get(str(runner_uid)))
-            df[ltp_col_name] = df[ltp_col_name].fillna(method='ffill')
-            df[ltp_col_name] = df[ltp_col_name].fillna(method='bfill')
-
             df[tv_col_name] = df['update_dict'].apply(lambda d: d['tv'].get(str(runner_uid)))
-            df[tv_col_name] = df[tv_col_name].fillna(method='ffill')
-            df[tv_col_name] = df[tv_col_name].fillna(method='bfill')
+
+            # fill nans
+            for series_uid in df['series_uid'].unique():
+                series_ix = df['series_uid'] == series_uid
+                df.loc[series_ix, ltp_col_name] = df.loc[series_ix, ltp_col_name].fillna(method='ffill')
+                df.loc[series_ix, ltp_col_name] = df.loc[series_ix, ltp_col_name].fillna(method='bfill')
+
+                df.loc[series_ix, tv_col_name] = df.loc[series_ix, tv_col_name].fillna(method='ffill')
+                df.loc[series_ix, tv_col_name] = df.loc[series_ix, tv_col_name].fillna(method='bfill')
 
             # drop if column is all nan
             if df[ltp_col_name].isna().all():
@@ -61,3 +68,9 @@ def get_processed_horse_racing_odds(runner_codes=None, from_date=None, until_dat
         df = df.dropna(axis=1, how='all')
 
         return df
+
+
+df = get_processed_horse_racing_odds(runner_codes=[RCEnum.FAVOURITE], from_date=datetime(2020, 1, 1),
+                                     until_date=datetime(2020, 1, 2), market_location_code='CHELTENHAM')
+
+print(df)
