@@ -15,7 +15,7 @@ from crusher.runner import horse_racing_runner_map
 def get_processed_horse_racing_odds(runner_codes=None, from_date=None, until_date=None,
                                     market_type_code=None, division_codes=None,
                                     item_freq_type_code=None, min_market_total_volume=None,
-                                    min_market_pre_off_volume=None, max_mins_from_off_time=None,
+                                    min_market_pre_off_volume=None, max_mins_from_off_time=60,
                                     market_location_code=None):
     """Return dataframe of horse racing odds in a user friendly format
     i.e. with columns as individuals horse odds or volume"""
@@ -55,12 +55,12 @@ def get_processed_horse_racing_odds(runner_codes=None, from_date=None, until_dat
                 df.loc[series_ix, tv_col_name] = df.loc[series_ix, tv_col_name].fillna(method='bfill')
 
             # drop if column is all nan
-            if df[ltp_col_name].isna().all():
-                df = df.drop([ltp_col_name, tv_col_name], axis=1)
-            else:
+                if df[ltp_col_name].isna().all():
+                     df = df.drop([ltp_col_name, tv_col_name], axis=1)
+                else:
                 # convert to float
-                df[ltp_col_name] = df[ltp_col_name].apply(lambda x: float(x))
-                df[tv_col_name] = df[tv_col_name].apply(lambda x: float(x))
+                    df[ltp_col_name] = df[ltp_col_name].apply(lambda x: float(x) if x else None)
+                    df[tv_col_name] = df[tv_col_name].apply(lambda x: float(x) if x else None)
 
         # Drop unnecessary columns
         df = df.drop('update_dict', axis=1)
@@ -68,9 +68,3 @@ def get_processed_horse_racing_odds(runner_codes=None, from_date=None, until_dat
         df = df.dropna(axis=1, how='all')
 
         return df
-
-
-df = get_processed_horse_racing_odds(runner_codes=[RCEnum.FAVOURITE], from_date=datetime(2020, 1, 1),
-                                     until_date=datetime(2020, 1, 2), market_location_code='CHELTENHAM')
-
-print(df)
