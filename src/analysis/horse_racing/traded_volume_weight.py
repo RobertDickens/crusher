@@ -18,6 +18,8 @@ def calculate_volume_weighted_average_price(df, ltp_col_name, tv_col_name):
     vwap = (df['traded_per_second'] * df[ltp_col_name]).sum() / df['traded_per_second'].sum()
     return vwap
 
+def calculate_average_final_price(df, final_price_range_in_seconds):
+    pass
 
 def calculate_traded_volume_by_price(df, ltp_col_name, tv_col_name):
     df['traded_per_second'] = df[tv_col_name].diff()
