@@ -32,7 +32,8 @@ def get_processed_horse_racing_odds(runner_codes=None, from_date=None, until_dat
                                                         item_freq_type_code=item_freq_type_code,
                                                         min_market_total_volume=min_market_total_volume,
                                                         min_market_pre_off_volume=min_market_pre_off_volume,
-                                                        max_mins_from_off_time=max_mins_from_off_time)
+                                                        max_mins_from_off_time=max_mins_from_off_time,
+                                                        market_location_code=market_location_code)
         df['update_dict'] = df['update_json'].apply(lambda j: json.loads(j))
         df = df.drop('update_json', axis=1)
         df = df.sort_values('published_datetime', ascending=True)

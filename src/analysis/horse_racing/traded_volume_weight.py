@@ -30,8 +30,3 @@ def calculate_traded_volume_by_price(df, ltp_col_name, tv_col_name):
     # draw vertical line from (70,100) to (70, 250)
     plt.plot([vwap, vwap], [0, max(tvbp)], 'k-', lw=2)
     plt.show()
-
-
-for series_uid in df_['series_uid'].unique():
-    sub_df = df_[df_['series_uid'] == series_uid]
-    calculate_traded_volume_by_price(sub_df, 'favourite_ltp', 'favourite_tv')
