@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
+from matplotlib import pyplot as plt
 
 from crusher.runner import RunnerCodeEnum as RCEnum
 from utils.helper_functions.data_loading import get_processed_horse_racing_odds
@@ -29,17 +30,21 @@ with dbm.get_managed_session() as session:
 
         off_time = ExchangeOddsSeries.get_by_uid(session, int(series_uid)).market.off_time
         sub_df = sub_df.set_index('published_datetime')
-        sub_df_x = sub_df[(off_time - sub_df.index).seconds <= 180]
-        sub_df_y = sub_df[(off_time - sub_df.index).seconds > 180]
+        sub_df_x = sub_df[(off_time - sub_df.index).seconds > 180]
+        sub_df_y = sub_df[(off_time - sub_df.index).seconds <= 180]
         x_vwav = calculate_volume_weighted_average_price(sub_df_x, 'favourite_ltp', 'favourite_tv')
         y_vwav = calculate_volume_weighted_average_price(sub_df_y, 'favourite_ltp', 'favourite_tv')
-        x_price = sub_df[((off_time - sub_df.index) > 175) & ((off_time - sub_df.index) < 185)]['favourite_ltp'].mean()
-        final_price = sub_df[(off_time - sub_df.index) < 20]['favourite_ltp'].mean()
+        x_price = sub_df[((off_time - sub_df.index).seconds > 175) & ((off_time - sub_df.index).seconds < 185)]['favourite_ltp'].mean()
+        final_price = sub_df[(off_time - sub_df.index).seconds < 20]['favourite_ltp'].mean()
 
         vwav_before_3_min.append(x_vwav)
         vwav_after_3_min.append(y_vwav)
         price_at_3_min.append(x_price)
         final_prices.append(final_price)
+        #
+        # sub_df['favourite_ltp'].plot()
+        # plt.show()
+
 
     analysis_df = pd.DataFrame({'vwav_before_3': vwav_before_3_min,
                                 'vwav_after_3': vwav_after_3_min,
