@@ -74,6 +74,7 @@ class BookieOddsCollector:
                 rows['match_date'].append(match_date)
 
         df = pd.DataFrame(rows)
+        df = df.loc[df['match_date'] == datetime.date.today()]
         return df
 
     def stream_live_odds(self, refresh_rate_seconds=60, log_odds=False, save_path=None,

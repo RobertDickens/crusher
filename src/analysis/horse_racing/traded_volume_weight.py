@@ -13,10 +13,11 @@ df_ = get_processed_horse_racing_odds(runner_codes=[RCEnum.FAVOURITE, RCEnum.SEC
 
 
 def calculate_volume_weighted_average_price(df, ltp_col_name, tv_col_name):
-    df['traded_per_second'] = df[tv_col_name].diff()
+    traded_per_second = df[tv_col_name].diff()
     df = df.dropna()
-    vwap = (df['traded_per_second'] * df[ltp_col_name]).sum() / df['traded_per_second'].sum()
+    vwap = (traded_per_second * df[ltp_col_name]).sum() / traded_per_second.sum()
     return vwap
+
 
 def calculate_average_final_price(df, final_price_range_in_seconds):
     pass

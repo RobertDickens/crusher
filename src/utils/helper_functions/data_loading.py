@@ -67,5 +67,6 @@ def get_processed_horse_racing_odds(runner_codes=None, from_date=None, until_dat
         df = df.drop('update_dict', axis=1)
         df = df.drop([runner_uid for runner_uid in runner_uids], axis=1)
         df = df.dropna(axis=1, how='all')
+        df = df.drop_duplicates(['series_uid', 'published_datetime'])
 
         return df
